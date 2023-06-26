@@ -1,0 +1,2 @@
+Mongodb username: site222315 - Mongodb password: ay5ieNai
+You can connect your mongodb from your site web using hostname mongo_site222315
