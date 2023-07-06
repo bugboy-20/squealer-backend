@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "ESNext",
+    "allowSyntheticDefaultImports": true,
     "outDir": "dist",
     "moduleResolution": "NodeNext",
+    "module": "NodeNext",
     "sourceMap": true
   },
   "include": ["src/**/*.ts"]
