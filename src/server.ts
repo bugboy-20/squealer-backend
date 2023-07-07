@@ -19,6 +19,7 @@ app
   .get('/api/help', (req, res) => res.end('Hello World!'))
 
   .get('/api/auth/token', (req, res) => res.end('SEX'))
+  .get('', (req,res) => {res})
 
 
   .listen(8000, err => {
