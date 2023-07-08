@@ -9,7 +9,9 @@ const dbHost = 'mongo_site222315';
 async function db_open() {
     const url = `mongodb://${dbUser}:${dbPassword}@${dbHost}/${dbName}`;
 
-    mongoose.connect(url)
+    mongoose.connect(url, {
+                    authSource: 'admin'
+    })
     .then(
         () =>  console.log('Connesso, yeee'),
         (err) => console.error('Error:' + err)
