@@ -1,6 +1,9 @@
 //https://renedellefont.com/writing/introduction-to-polka/
 //https://codesource.io/create-a-crud-application-using-vue-node-and-mongodb/ <- referecne tuttorial
 
+/* TODO List
+ *  token
+ */
 
 const serve_app = require('sirv')(__dirname + '/../app');
 import bodyParser from "body-parser";
@@ -10,9 +13,16 @@ import {db_open} from "./db_utils";
 import routes from "./routes/routes";
 import cors from "cors"
 
-//TODO add cors
+const handle404 = (req, res) => {
+  res.statusCode = 404;
+  res.end('404 - Page not found');
+}
 
-const app = polka()
+const app = polka({
+                 onNoMatch: handle404,
+                 onError : (err, req, res, next) => { res.end('err') }
+})
+
 app
   .use(cors())
   .use(serve_app)
@@ -26,8 +36,6 @@ app
   .get('/api/help', (req, res) => res.end('Hello World!'))
 
   .get('/api/auth/token', (req, res) => res.end('SEX'))
-  .get('', (req,res) => {res})
-
 
   .listen(8000, (err : Error) => {
     if (err) throw err

@@ -18,11 +18,10 @@ const addLog : RequestHandler = async (req, res) => {
 const listAllLogs : RequestHandler = async (req, res) => {
   try {
     const logs: Log[] = await LogModel.find().exec();
-     res.writeHead(400, {
+     res.writeHead(200, {
       'Content-Type': 'application/json',
-      'X-Error-Code': 'Please dont do this IRL'
     });
-    let json = JSON.stringify(logs);
+    let json = JSON.stringify(logs.reverse());
     res.end(json);
     //res.status(200).json(logs);
     //res.json(logs);
