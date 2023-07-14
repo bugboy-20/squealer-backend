@@ -1,9 +1,10 @@
 import {compare} from "bcrypt"
 import {IncomingMessage, ServerResponse} from "http"
 import { verify } from "jsonwebtoken"
+import {Next} from "polka"
 import {User, UserModel} from "../models/userModel"
-/*
-function authenticateToken(req : IncomingMessage, res : ServerResponse, next) {
+
+function verifyToken(req : any, res : ServerResponse, next : Next) {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
   if (token == null) {
@@ -17,10 +18,10 @@ function authenticateToken(req : IncomingMessage, res : ServerResponse, next) {
         res.statusCode = 403
         res.end(err.message)
     }
-    req.user = user
+    req.user = user;
     next()
   })
-}*/
+}
 
 async function userLogin(username : string, password : string) : Promise<boolean> {
 
@@ -36,3 +37,4 @@ async function userLogin(username : string, password : string) : Promise<boolean
 
 async function revoceToken() {} //TODO
 
+export { verifyToken }

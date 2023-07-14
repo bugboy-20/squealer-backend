@@ -3,12 +3,13 @@
 
 /* TODO List
  *  username univoco
- *  get singolo user
  *  token
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');
-import 'dotenv/config'
+import dotenv from 'dotenv'
+dotenv.config()
+
 import bodyParser from "body-parser";
 import polka from "polka";
 import {db_open} from "./db_utils";
@@ -19,7 +20,7 @@ import {send404, send501} from "./utils/statusSenders";
 
 const app = polka({
                  onNoMatch: send404,
-                 onError : (err, req, res, next) => { res.end('err') }
+                 onError : (err, req, res, next) => { res.end(err.message) }
 })
 
 console.log(process.env)
@@ -34,9 +35,9 @@ routes(app)
 db_open()
 
 app
-  .get('/api/help', (req, res) => res.end('Hello World!'))
+  .get('/api/help', (_, res) => res.end('Hello World!'))
 
-  .get('/api/auth/token', (req, res) => send501)
+  .get('/api/auth/token', (_) => send501)
 
   .listen(8000, (err : Error) => {
     if (err) throw err
