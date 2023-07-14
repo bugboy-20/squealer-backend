@@ -7,7 +7,9 @@ const addLog : RequestHandler = async (req, res) => {
   try {
     const log = new LogModel(req.body);
     const savedLog = await log.save();
-    res.end(JSON.stringify(savedLog));
+    res
+      .writeHead(200, {'Content-Type': 'application/json'})
+      .end(JSON.stringify(savedLog));
   } catch(e) {
     console.error('Error in addLog: ' + e);
     res.end(JSON.stringify(req.body, null, 2))

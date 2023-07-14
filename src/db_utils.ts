@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-const dbName = 'squealer';
-const dbUser = 'site222315';
-const dbPassword = 'ay5ieNai';
-const dbHost = 'mongo_site222315';
+const dbName = process.env.DBNAME
+const dbUser = process.env.DBUSER
+const dbPassword = process.env.DBPASSWORD
+const dbHost = process.env.DBHOST
 
 
 async function db_open() {
@@ -35,3 +35,4 @@ async function db_op(collectionName : string , op : Function) {
 }
 const db_access = db_op;*/
 export { db_open, db_close }
+

@@ -2,26 +2,27 @@
 //https://codesource.io/create-a-crud-application-using-vue-node-and-mongodb/ <- referecne tuttorial
 
 /* TODO List
+ *  username univoco
+ *  get singolo user
  *  token
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');
+import 'dotenv/config'
 import bodyParser from "body-parser";
 import polka from "polka";
 import {db_open} from "./db_utils";
 //const polka = require('polka');
 import routes from "./routes/routes";
 import cors from "cors"
-
-const handle404 = (req, res) => {
-  res.statusCode = 404;
-  res.end('404 - Page not found');
-}
+import {send404, send501} from "./utils/statusSenders";
 
 const app = polka({
-                 onNoMatch: handle404,
+                 onNoMatch: send404,
                  onError : (err, req, res, next) => { res.end('err') }
 })
+
+console.log(process.env)
 
 app
   .use(cors())
@@ -35,7 +36,7 @@ db_open()
 app
   .get('/api/help', (req, res) => res.end('Hello World!'))
 
-  .get('/api/auth/token', (req, res) => res.end('SEX'))
+  .get('/api/auth/token', (req, res) => send501)
 
   .listen(8000, (err : Error) => {
     if (err) throw err
