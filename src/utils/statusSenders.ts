@@ -1,12 +1,13 @@
+import {RequestHandler} from "sirv";
 
-const send404 = (req, res) => {
+const send404 : RequestHandler = (req, res) => {
   res.statusCode = 404;
   res.end('404 - Page not found');
 }
 
-const send501 = (req, res) => {
+const send501 : RequestHandler = (req, res) => {
   res.statusCode = 501;
-  res.end();
+  res.end('501 - Not implemented');
 }
 
 export {send404, send501};
