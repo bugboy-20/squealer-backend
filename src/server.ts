@@ -8,7 +8,7 @@
 
 const serve_app = require('sirv')(__dirname + '/../app');
 import dotenv from 'dotenv'
-dotenv.config()
+dotenv.config({ path: `${__dirname}/.env`})
 
 import bodyParser from "body-parser";
 import polka from "polka";
@@ -24,6 +24,7 @@ const app = polka({
 })
 
 console.log(process.env)
+console.log(__dirname)
 
 app
   .use(cors())

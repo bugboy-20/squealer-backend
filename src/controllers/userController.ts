@@ -46,8 +46,14 @@ const addUser : RequestHandler = async (req, res) => {
 
   try {
     const user = new UserModel(req.body);
-    const isUsernamealreadytaken = await UserModel.find({ username : user.username}).exec() //TODO check already taken
-    res.sendStatus(202)
+    const existingUser = await UserModel.findOne({ username: user.username }).exec();
+
+    if (existingUser) {
+      res.statusCode = 409
+      return res.json({ message: 'Username already taken' });
+    }
+
+    //res.sendStatus(202)
     user.password = await hash(user.password, 10);
     const savedUser = await user.save();
     res
