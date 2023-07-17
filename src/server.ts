@@ -17,6 +17,7 @@ import {db_open} from "./db_utils";
 import routes from "./routes/routes";
 import cors from "cors"
 import {send404, send501} from "./utils/statusSenders";
+import {verifyToken} from './utils/authorisation';
 
 const app = polka({
                  onNoMatch: send404,
@@ -28,6 +29,7 @@ console.log(__dirname)
 
 app
   .use(cors())
+  .use(verifyToken)
   .use(serve_app)
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: false }))

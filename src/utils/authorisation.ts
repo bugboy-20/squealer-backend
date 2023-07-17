@@ -1,10 +1,12 @@
 import {compare} from "bcrypt"
 import {IncomingMessage, ServerResponse} from "http"
 import { verify } from "jsonwebtoken"
-import {Next} from "polka"
+import polka, {Next} from "polka"
+import { expressjwt, ExpressJwtRequest } from "express-jwt";
 import {User, UserModel} from "../models/userModel"
-
-function verifyToken(req : any, res : ServerResponse, next : Next) {
+import {RequestHandler} from "sirv";
+/*
+function verifyToken(req : Request, res : ServerResponse, next : Next) {
   const authHeader = req.headers['authorization']
   const token = authHeader && authHeader.split(' ')[1]
   if (token == null) {
@@ -19,8 +21,31 @@ function verifyToken(req : any, res : ServerResponse, next : Next) {
         res.end(err.message)
     }
     req.user = user;
+
     next()
   })
+}*/
+
+const verifyToken =  expressjwt({
+    secret: "shhhhhhared-secret",
+    algorithms: ["HS256"],
+  }).unless({ path: ["/","/token"] })
+
+const unauthorizatedUserHandler  = (err, req : Request, res : ServerResponse, next : Next) => {
+  if (err.name === "UnauthorizedError") {
+    let url = '/login';
+    let str = `Redirecting to ${url}`;
+
+    res.writeHead(302, {
+        Location: url,
+        'Content-Type': 'text/plain',
+        'Content-Length': str.length
+    });
+
+    res.end(str);
+  } else {
+    next(err);
+  }
 }
 
 async function userLogin(username : string, password : string) : Promise<boolean> {
@@ -37,4 +62,4 @@ async function userLogin(username : string, password : string) : Promise<boolean
 
 async function revoceToken() {} //TODO
 
-export { verifyToken }
+export { verifyToken , userLogin}
