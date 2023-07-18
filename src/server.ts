@@ -2,8 +2,6 @@
 //https://codesource.io/create-a-crud-application-using-vue-node-and-mongodb/ <- referecne tuttorial
 
 /* TODO List
- *  username univoco
- *  token
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');
