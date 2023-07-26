@@ -13,7 +13,8 @@ let routelist : Array<(a : polka.Polka) => void> = [
 const routes : (app : polka.Polka) => polka.Polka = (app) => {
     routelist.forEach(f => f(app))
     app.all('/api/*', (req,res) => {
-        res.sendStatus(405)
+        res.statusCode = 405
+        res.end('405 - Method not Allowed')
     })
     return app;
 }

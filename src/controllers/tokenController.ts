@@ -11,9 +11,9 @@ if(! await userLogin(username,password)) {
 
   const infos = { name : username }
 
-  const accessToken = sign(infos, process.env.ACCESS_TOKEN_SECRET)
-
-  res.json(accessToken);
+  const accessToken = sign(infos, process.env.ACCESS_TOKEN_SECRET, {expiresIn : '30min' })
+  
+  res.end(accessToken)
 
 }
 

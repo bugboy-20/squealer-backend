@@ -2,6 +2,8 @@
 //https://codesource.io/create-a-crud-application-using-vue-node-and-mongodb/ <- referecne tuttorial
 
 /* TODO List
+ *
+ * scadenza token (30min)
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');
@@ -27,7 +29,7 @@ console.log(__dirname)
 
 app
   .use(cors())
-  .use(verifyToken)
+  //.use(verifyToken)
   .use(serve_app)
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: false }))
@@ -37,6 +39,7 @@ db_open()
 
 app
   .get('/api/help', (_, res) => res.end('Hello World!'))
+  .get('/tokentest', verifyToken, (req,res) => { res.end('Benvenuto nel mio onlyfans')} )
 
   .get('/api/auth/token', (_) => send501)
 
