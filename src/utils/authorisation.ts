@@ -27,9 +27,9 @@ function verifyToken(req : Request, res : ServerResponse, next : Next) {
 }*/
 
 const verifyToken =  expressjwt({
-    secret: "shhhhhhared-secret",
+    secret: process.env.ACCESS_TOKEN_SECRET,
     algorithms: ["HS256"],
-  }).unless({ path: ["/","/api/token","/api/users"] }) //TODO ???
+  }) //.unless({ path: ["/","/api/token","/api/users"] }) //TODO ???
 
 
 const unauthorizatedUserHandler  = (err, req : Request, res : ServerResponse, next : Next) => {
