@@ -15,6 +15,7 @@ interface User extends Document {
 const userSchema: Schema<User> = new Schema<User>({
   username: {
     type: String,
+    unique: true,
     required: true
   },
   email: {
