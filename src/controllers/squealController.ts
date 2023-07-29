@@ -1,9 +1,15 @@
 import {RequestHandler} from "express";
 import {Squeal, SquealModel} from "../models/squealModel";
 
-const listAllSqueals : RequestHandler = async (req, res) => {
+const getSqueals : RequestHandler = async (req, res) => {
   try {
-    const squeals : Squeal[] = await SquealModel.find().exec();
+    let squeals : Squeal[];
+    const { id } = req.params;
+    if (id) {
+      squeals = await SquealModel.find({ _id: id}).exec();
+    } else {
+      squeals = await SquealModel.find().exec();
+    }
      res.writeHead(200, {
       'Content-Type': 'application/json',
     });
@@ -62,5 +68,15 @@ const postSqueal : RequestHandler = async (req, res) => {
 
 }
 
+const deleteSqueal : RequestHandler = async (req, res) => {
 
-export {postSqueal, listAllSqueals};
+  const { id } = req.params;
+
+  let boh = await SquealModel.deleteOne({ _id : id})
+  
+
+  res.end({ log: `${boh.deletedCount} deleted`})
+}
+
+
+export {postSqueal, getSqueals, deleteSqueal};

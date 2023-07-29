@@ -1,4 +1,5 @@
 import polka from "polka";
+import channelRoutes from "./channelRouter";
 import logRoutes from "./logRoutes";
 import squealRoutes from "./squealRouter";
 import tokenRoutes from "./tokenRoutes";
@@ -9,7 +10,8 @@ let routelist : Array<(a : polka.Polka) => void> = [
     userRoutes,
     logRoutes,
     tokenRoutes,
-    squealRoutes
+    squealRoutes,
+    channelRoutes
 ];
 
 const routes : (app : polka.Polka) => polka.Polka = (app) => {
