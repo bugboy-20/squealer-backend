@@ -3,7 +3,15 @@
 
 /* TODO List
  *
- * scadenza token (30min)
+ * PATCH /api/squeals/:id
+ *  {
+ *    op: viewed | upvote | downvote
+ *    data?: string
+ *  }
+ *
+ *  GET /api/channels/:name/squeals
+ *
+ *  GET /squeals/?author=,?channel=
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');

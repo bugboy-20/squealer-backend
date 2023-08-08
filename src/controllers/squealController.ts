@@ -1,28 +1,58 @@
 import {RequestHandler} from "express";
 import {Squeal, SquealModel} from "../models/squealModel";
 
-const getSqueals : RequestHandler = async (req, res) => {
+const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare il codice query, channels non esiste
   try {
+    const queryFilters: { [key: string]: any } = {};
+
     let squeals : Squeal[];
-    const { id } = req.params;
-    if (id) {
-      squeals = await SquealModel.find({ _id: id}).exec();
-    } else {
-      squeals = await SquealModel.find().exec();
-    }
-     res.writeHead(200, {
+
+    console.log(req.query)
+
+    if ( req.params.id )
+      queryFilters.id = req.params.id;
+    if ( req.query.author)
+      queryFilters.author =  req.query.author;
+    if ( req.query.channel)
+      queryFilters.channel =  req.query.channel;
+    //TODO cathegory
+
+    squeals = await SquealModel.find(queryFilters).exec();
+
+    res.writeHead(200, {
       'Content-Type': 'application/json',
     });
     let json = JSON.stringify(squeals);
     res.end(json);
-    //res.status(200).json(logs);
-    //res.json(logs);
+
   } catch (error) {
     // Handle any potential errors during the query
     console.error('listAllUsers error: ' + error)
     //await fetch(...) TODO
     throw error;
   }
+}
+
+const updateSqueal : RequestHandler = async (req, res) => { //TODO
+
+
+  let squealID = req.params.id;
+  let opType = req.body.op;
+  
+  try {
+    switch (opType) {
+      case "viewed":
+        await SquealModel.updateOne({"id": squealID}, { $inc: {"impressions":1}}); break;
+      case "upvote":
+        await SquealModel.updateOne({"id": squealID}, { $inc: {"positive_reaction":1}}); break;
+      case "downvote":
+        await SquealModel.updateOne({"id": squealID}, { $inc: {"negative_reaction":-1}}); break; //TODO controllare funzioni
+    }
+  } catch(e) {
+    res.statusCode = 400;
+    res.end('errore non aggiornato')
+  }
+
 }
 
 /*
@@ -79,4 +109,4 @@ const deleteSqueal : RequestHandler = async (req, res) => {
 }
 
 
-export {postSqueal, getSqueals, deleteSqueal};
+export {postSqueal, getSqueals, deleteSqueal, updateSqueal};
