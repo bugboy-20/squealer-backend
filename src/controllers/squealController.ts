@@ -10,7 +10,7 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
     console.log(req.query)
 
     if ( req.params.id )
-      queryFilters.id = req.params.id;
+      queryFilters.id = parseInt( req.params.id );
     if ( req.query.author)
       queryFilters.author =  req.query.author;
     if ( req.query.channel)
@@ -36,45 +36,26 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
 const updateSqueal : RequestHandler = async (req, res) => { //TODO
 
 
-  let squealID = req.params.id;
+  let squealID : number = +req.params.id;
   let opType = req.body.op;
+  let dbRes;
   
   try {
     switch (opType) {
       case "viewed":
-        await SquealModel.updateOne({"id": squealID}, { $inc: {"impressions":1}}); break;
+        dbRes = await SquealModel.updateOne({"id": squealID}, { $inc: {"impressions":1}}); break;
       case "upvote":
-        await SquealModel.updateOne({"id": squealID}, { $inc: {"positive_reaction":1}}); break;
+        dbRes = await SquealModel.updateOne({"id": squealID}, { $inc: {"positive_reaction":1}}); break;
       case "downvote":
-        await SquealModel.updateOne({"id": squealID}, { $inc: {"negative_reaction":-1}}); break; //TODO controllare funzioni
+        dbRes = await SquealModel.updateOne({"id": squealID}, { $inc: {"negative_reaction":-1}}); break; //TODO controllare funzioni
     }
+    res.end(JSON.stringify(dbRes))
   } catch(e) {
     res.statusCode = 400;
     res.end('errore non aggiornato')
   }
 
 }
-
-/*
-const findUser : RequestHandler = async (req, res) => {
-  try {
-    const username = req.params.username;
-    const user: User = await UserModel.findOne({username}).exec();
-     res.writeHead(200, {
-      'Content-Type': 'application/json',
-    });
-    let json = JSON.stringify(user);
-    res.end(json);
-    //res.status(200).json(logs);
-    //res.json(logs);
-  } catch (error) {
-    // Handle any potential errors during the query
-    console.error('findUser error: ' + error)
-    //await fetch(...) TODO
-    throw error;
-  }
-}
-*/
 
 const postSqueal : RequestHandler = async (req, res) => {
 
