@@ -7,11 +7,16 @@
  *  {
  *    op: viewed | upvote | downvote
  *    data?: string
+ * 
  *  }
+ *
+ *  
  *
  *  GET /api/channels/:name/squeals
  *
- *  GET /squeals/?author=,?channel=
+ *  GET /squeals/?author=,?channel=,?page
+ *  
+ *  sistemare id e creazione di squeals
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');
