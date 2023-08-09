@@ -19,6 +19,11 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
 
     squeals = await SquealModel.find(queryFilters).exec();
 
+    if ( req.query.page  && typeof req.query.page === "string") {
+      let pNum = parseInt(req.query.page);
+      squeals.slice(pNum*10,pNum*10+10)
+    }
+
     res.writeHead(200, {
       'Content-Type': 'application/json',
     });
