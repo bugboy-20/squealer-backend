@@ -1,38 +1,42 @@
 import {RequestHandler} from "express";
+import {now, Query} from "mongoose";
 import {Squeal, SquealModel} from "../models/squealModel";
 
 const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare il codice query, channels non esiste
   try {
     const queryFilters: { [key: string]: any } = {};
 
-    let squeals : Squeal[];
+    let squeals //: Query<Squeal[], number>
 
     console.log(req.query)
 
-    if ( req.params.id )
-      queryFilters.id = parseInt( req.params.id );
+    if ( req.params._id )
+      queryFilters._id = req.params._id ;
     if ( req.query.author)
       queryFilters.author =  req.query.author;
     if ( req.query.channel)
       queryFilters.channel =  req.query.channel;
     //TODO cathegory
 
-    squeals = await SquealModel.find(queryFilters).exec();
+    squeals = SquealModel.find(queryFilters);
 
     if ( req.query.page  && typeof req.query.page === "string") {
       let pNum = parseInt(req.query.page);
-      squeals.slice(pNum*10,pNum*10+10)
+      squeals
+        .skip(pNum*10) //TODO generalizzare
+        .limit(10)
     }
+
 
     res.writeHead(200, {
       'Content-Type': 'application/json',
     });
-    let json = JSON.stringify(squeals);
+    let json = JSON.stringify(await squeals.exec());
     res.end(json);
 
   } catch (error) {
     // Handle any potential errors during the query
-    console.error('listAllUsers error: ' + error)
+    console.error('getSqueals error: ' + error)
     //await fetch(...) TODO
     throw error;
   }
@@ -41,18 +45,18 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
 const updateSqueal : RequestHandler = async (req, res) => { //TODO
 
 
-  let squealID : number = +req.params.id;
+  let squealID : number = +req.params._id;
   let opType = req.body.op;
   let dbRes;
   
   try {
     switch (opType) {
       case "viewed":
-        dbRes = await SquealModel.updateOne({"id": squealID}, { $inc: {"impressions":1}}); break;
+        dbRes = await SquealModel.updateOne({"_id": squealID}, { $inc: {"impressions":1}}); break;
       case "upvote":
-        dbRes = await SquealModel.updateOne({"id": squealID}, { $inc: {"positive_reaction":1}}); break;
+        dbRes = await SquealModel.updateOne({"_id": squealID}, { $inc: {"positive_reaction":1}}); break;
       case "downvote":
-        dbRes = await SquealModel.updateOne({"id": squealID}, { $inc: {"negative_reaction":-1}}); break; //TODO controllare funzioni
+        dbRes = await SquealModel.updateOne({"_id": squealID}, { $inc: {"negative_reaction":-1}}); break; //TODO controllare funzioni
     }
     res.end(JSON.stringify(dbRes))
   } catch(e) {
@@ -65,7 +69,16 @@ const updateSqueal : RequestHandler = async (req, res) => { //TODO
 const postSqueal : RequestHandler = async (req, res) => {
 
   try {
-    const squeal = new SquealModel(req.body);
+    let inSqueal : Squeal = req.body
+    
+    inSqueal.impressions = 0;
+    inSqueal.positive_reaction = 0;
+    inSqueal.negative_reaction = 0;
+    inSqueal.datetime = now();
+
+    console.log(inSqueal)
+
+    const squeal = new SquealModel(inSqueal);
     /*const existingUser = await UserModel.findOne({ username: user.username }).exec();
 
     if (existingUser) {
@@ -79,7 +92,9 @@ const postSqueal : RequestHandler = async (req, res) => {
       .writeHead(201, {'Content-Type': 'application/json'})
       .end(JSON.stringify(savedSqueal));
   } catch(e) {
-    console.error('addUser error: ' + e)
+    console.error('postSqueal error: ' + e)
+    res.statusCode = 401
+    res.end()
   }
 
 }

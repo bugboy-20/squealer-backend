@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose'; //l'ha fatto ChatGPT 
 
 interface Squeal extends Document {
-  //id: number, TODO accertarsi dell'inutilità
   receivers: string[],
   author: string,
   body: string// | img | video | geolocazione,
@@ -9,24 +8,28 @@ interface Squeal extends Document {
   impressions: number,
   positive_reaction: number,
   negative_reaction: number,
-  category: object,
+  category: string, //TODO a cosa serve category?
   automatic_receiver: /*[§CONTROVERSIAL, ..]: */string[]
 }
 
+interface Squeal {
+  receivers: string[],
+  author: string,
+  body: string// | img | video | geolocazione,
+  category: string,
+  automatic_receiver: /*[§CONTROVERSIAL, ..]: */string[]
+}
+
+
 const squealSchema: Schema<Squeal> = new Schema<Squeal>({
-  /*id: {
-    type: Number,
-    unique: true,
-    required: true
-  },*/
-  receivers: [{
-    type: String,
-    required: true
-  }],
   author: {
     type: String,
     required: true
   },
+  receivers: [{
+    type: String,
+    required: true
+  }],
   body: {
     type: String,
     required: true
