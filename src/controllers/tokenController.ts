@@ -5,6 +5,7 @@ import {userLogin} from "../utils/authorisation";
 const getToken : RequestHandler = async (req,res) => {
 const { username, password } = req.body;
 if(! await userLogin(username,password)) {
+  res.statusCode = 401;
   res.end("unathorized")
   return
 }

@@ -22,6 +22,6 @@
     "sirv": "^2.0.3"
   },
   "scripts": {
-    "deploy": "tsc; cp ./package.json ./dist/package.json; cp .env ./dist/.env; rsync -urltv -e ssh /home/diego/Documenti/squealer-backend/dist/ diego.ammirabile@ines.cs.unibo.it:/home/web/site222315/html/backend"
+    "deploy": "tsc; cp ./package.json ./dist/package.json; cp .env ./dist/.env; rsync -urltv -e ssh /home/diego/Documenti/squealer-backend/dist/ diego.ammirabile@lucia.cs.unibo.it:/home/web/site222315/html/backend"
   }
 }

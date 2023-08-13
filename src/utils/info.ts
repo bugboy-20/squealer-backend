@@ -11,6 +11,7 @@ const serverInfo : (app : polka.Polka) => void = app => {
           defaultCharsPerMonth: 750
         }
 
+        res.writeHead(200,'Content-Type: application/json')
         res.end(JSON.stringify(infos))
       })
 }

@@ -3,23 +3,15 @@
 
 /* TODO List
  *
- * PATCH /api/squeals/:id
- *  {
- *    op: viewed | upvote | downvote
- *    data?: string
- * 
- *  }
- *
- *  
- *
- *  GET /api/channels/:name/squeals
- *
- *  GET /squeals/?author=,?channel=,?page
+ *  come gestire gli squeal con immagini?
  *  
  *  sistemare id e creazione di squeals
+ *
+ *  valutare Zod e autogenerazione della API doc
  */
 
 const serve_app = require('sirv')(__dirname + '/../app');
+const serve_smm = require('sirv')(__dirname + '/../smm');
 import dotenv from 'dotenv'
 dotenv.config({ path: `${__dirname}/.env`})
 
@@ -44,6 +36,7 @@ app
   .use(cors())
   //.use(verifyToken)
   .use(serve_app)
+  .use('/smm',serve_smm)
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: false }))
 
