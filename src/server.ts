@@ -12,6 +12,7 @@
 
 const serve_app = require('sirv')(__dirname + '/../app');
 const serve_smm = require('sirv')(__dirname + '/../smm');
+//const serve_mod = require('sirv')(__dirname + '/../smm');
 import dotenv from 'dotenv'
 dotenv.config({ path: `${__dirname}/.env`})
 
@@ -36,7 +37,7 @@ app
   .use(cors())
   //.use(verifyToken)
   .use(serve_app)
-  .use('/smm',serve_smm)
+  .use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: false }))
 
