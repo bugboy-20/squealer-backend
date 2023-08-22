@@ -19,10 +19,13 @@
     "mongodb": "^5.6.0",
     "mongoose": "^7.3.1",
     "mongoose-file": "^0.0.2",
+    "mongoose-zod": "^0.1.1",
     "multer": "^1.4.5-lts.1",
     "node": "^20.2.0",
     "polka": "^0.5.0",
-    "sirv": "^2.0.3"
+    "sirv": "^2.0.3",
+    "ts-valid-mongodb": "^1.0.0",
+    "zod": "^3.22.2"
   },
   "scripts": {
     "deploy": "tsc; cp ./package.json ./dist/package.json; cp .env ./dist/.env; rsync -urltv -e ssh /home/diego/Documenti/squealer-backend/dist/ diego.ammirabile@lucia.cs.unibo.it:/home/web/site222315/html/backend"

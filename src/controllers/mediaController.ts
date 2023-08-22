@@ -1,6 +1,7 @@
 import multer from 'multer'; // For handling multipart/form-data
 import path from 'path';
 import {RequestHandler} from 'express';
+import {send501} from '../utils/statusSenders';
 
 
 const uploadMedia : RequestHandler = async (req,res) => {
@@ -24,5 +25,7 @@ const uploadMedia : RequestHandler = async (req,res) => {
   }
 }
 
-export { uploadMedia }
+const getMedia : RequestHandler = send501;
+
+export { uploadMedia , getMedia}
 
