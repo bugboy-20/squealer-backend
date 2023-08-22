@@ -25,17 +25,16 @@ const addChannel : RequestHandler = async (req, res) => {
 
 const getChannels : RequestHandler = async (req, res) => {
   try {
-    let channels;
-    const { channelName } = req.params;
-    if( channelName ) {
-      channels = ChannelModel.find({ name: channelName })
-    }
-    else {
-      channels = ChannelModel.find()
-    }
+    let channels = ChannelModel.find()
+    const channelName = req.params.channelName.replace(/%C2%A7/i, '§') // '§' issue
+    if( channelName )
+      channels.find({ name: channelName })
+
     if ( req.query.type)
       channels.find({type : req.query.type})
+    
 
+    console.log(channels.getFilter())
     res.writeHead(200, {
       'Content-Type': 'application/json',
     });
