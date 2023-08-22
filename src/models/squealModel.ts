@@ -9,7 +9,6 @@ interface Squeal extends Document {
   positive_reaction: number,
   negative_reaction: number,
   category: string, //TODO a cosa serve category?
-  automatic_receiver: /*[§CONTROVERSIAL, ..]: */string[]
 }
 
 interface Squeal {
@@ -17,7 +16,6 @@ interface Squeal {
   author: string,
   body: string// | img | video | geolocazione,
   category: string,
-  automatic_receiver: /*[§CONTROVERSIAL, ..]: */string[]
 }
 
 
@@ -54,9 +52,6 @@ const squealSchema: Schema<Squeal> = new Schema<Squeal>({
     type: String,
     required: true
   },
-  automatic_receiver: [{
-    type: String
-  }]
 });
 
 const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
