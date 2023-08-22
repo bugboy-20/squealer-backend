@@ -1,5 +1,5 @@
 import {RequestHandler} from "express";
-import {sign} from "jsonwebtoken";
+import {sign, Secret} from "jsonwebtoken";
 import {userLogin} from "../utils/authorisation";
 
 const getToken : RequestHandler = async (req,res) => {
@@ -12,8 +12,11 @@ const getToken : RequestHandler = async (req,res) => {
 
   const infos = { name : username }
 
-  const accessToken = sign(infos, process.env.ACCESS_TOKEN_SECRET, {expiresIn : '30min' })
+
+  const accessToken = sign(infos, process.env.ACCESS_TOKEN_SECRET as string, {expiresIn : '30min' })
   
+  const asd = sign
+
   res.end(accessToken)
 
 }

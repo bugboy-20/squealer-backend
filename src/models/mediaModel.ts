@@ -1,3 +1,4 @@
+/*
 import * as filePluginLib from "mongoose-file"
 
 var filePlugin = filePluginLib.filePlugin;
@@ -15,3 +16,4 @@ SampleSchema.plugin(filePlugin, {
     relative_to: uploads_base
 });
 var SampleModel = db.model("SampleModel", SampleSchema);
+*/

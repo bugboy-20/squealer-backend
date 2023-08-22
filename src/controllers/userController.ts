@@ -25,7 +25,7 @@ const listAllUsers : RequestHandler = async (req, res) => {
 const findUser : RequestHandler = async (req, res) => {
   try {
     const username = req.params.username;
-    const user: User = await UserModel.findOne({username}).exec();
+    const user = await UserModel.findOne({username}).exec();
      res.writeHead(200, {
       'Content-Type': 'application/json',
     });

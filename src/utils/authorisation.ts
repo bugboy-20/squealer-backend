@@ -27,12 +27,12 @@ function verifyToken(req : Request, res : ServerResponse, next : Next) {
 }*/
 
 const verifyToken =  expressjwt({
-    secret: process.env.ACCESS_TOKEN_SECRET,
+    secret: process.env.ACCESS_TOKEN_SECRET as string,
     algorithms: ["HS256"],
   }) //.unless({ path: ["/","/api/token","/api/users"] }) //TODO ???
 
 
-const unauthorizatedUserHandler  = (err, req : Request, res : ServerResponse, next : Next) => {
+const unauthorizatedUserHandler  = (err : any, req : Request, res : ServerResponse, next : Next) => {
   if (err.name === "UnauthorizedError") {
     let url = '/login';
     let str = `Redirecting to ${url}`;
@@ -51,13 +51,12 @@ const unauthorizatedUserHandler  = (err, req : Request, res : ServerResponse, ne
 
 async function userLogin(username : string, password : string) : Promise<boolean> {
 
-  try {
-    const user : User = await UserModel.findOne({username}).exec();
+  // con try catch non conpilava
+  const user : User | null = await UserModel.findOne({username}).exec();
+  if (user)
     return await compare(password, user.password)
-  } catch (e) {
-  }
-
-  return false;
+  else
+    return false;
 
 }
 
