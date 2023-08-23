@@ -4,21 +4,18 @@ import {Squeal, SquealModel} from "../models/squealModel";
 
 const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare il codice query, channels non esiste
   try {
-    const queryFilters: { [key: string]: any } = {};
 
-    let squeals //: Query<Squeal[], number>
-
-    console.log(req.query)
+    let squeals = SquealModel.find()
 
     if ( req.params._id )
-      queryFilters._id = req.params._id ;
+      squeals.find({ _id : req.params._id})
+    if ( req.params.channel)
+      squeals.find({ receivers: req.params.channel});
     if ( req.query.author)
-      queryFilters.author =  req.query.author;
+      squeals.find({ author:  req.query.author});
     if ( req.query.channel)
-      queryFilters.channel =  req.query.channel;
+      squeals.find({ receivers:  req.query.channel})
     //TODO cathegory
-
-    squeals = SquealModel.find(queryFilters);
 
     if ( req.query.page  && typeof req.query.page === "string") {
       let pNum = parseInt(req.query.page);
@@ -76,8 +73,6 @@ const postSqueal : RequestHandler = async (req, res) => {
     inSqueal.negative_reaction = 0;
     inSqueal.datetime = now();
 
-    console.log(inSqueal)
-
     const squeal = new SquealModel(inSqueal);
     /*const existingUser = await UserModel.findOne({ username: user.username }).exec();
 
@@ -93,7 +88,7 @@ const postSqueal : RequestHandler = async (req, res) => {
       .end(JSON.stringify(savedSqueal));
   } catch(e) {
     console.error('postSqueal error: ' + e)
-    res.statusCode = 401
+    res.statusCode = 400
     res.end()
   }
 
@@ -101,12 +96,18 @@ const postSqueal : RequestHandler = async (req, res) => {
 
 const deleteSqueal : RequestHandler = async (req, res) => {
 
-  const { id } = req.params;
+  try {
+    const id  = req.params.id
 
-  let boh = await SquealModel.deleteOne({ _id : id})
-  
+    await SquealModel.deleteOne({ _id : id})
+    
 
-  res.end({ log: `${boh.deletedCount} deleted`})
+    res.end({ log: `${id} deleted`})
+  } catch(e) {
+    console.error(e)
+    res.statusCode = 500
+    res.end()
+  }
 }
 
 

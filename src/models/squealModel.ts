@@ -8,14 +8,14 @@ interface Squeal extends Document {
   impressions: number,
   positive_reaction: number,
   negative_reaction: number,
-  category: string, //TODO a cosa serve category?
+  category: string[], //TODO a cosa serve category?
 }
 
 interface Squeal {
   receivers: string[],
   author: string,
   body: string// | img | video | geolocazione,
-  category: string,
+  category: string[],
 }
 
 
@@ -48,10 +48,10 @@ const squealSchema: Schema<Squeal> = new Schema<Squeal>({
     type: Number,
     required: true
   },
-  category: {
+  category: [{
     type: String,
     required: true
-  },
+  }],
 });
 
 const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
