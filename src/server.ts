@@ -3,9 +3,11 @@
 
 /* TODO List
  *
+ *  sistemare user model
+ *
  *  come gestire gli squeal con immagini?
  *  
- *  sistemare id e creazione di squeals
+ *  
  *
  *  valutare Zod e autogenerazione della API doc
  */
@@ -39,7 +41,7 @@ app
   .use(serve_app)
   .use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
-  .use(bodyParser.urlencoded({ extended: false }))
+  .use(bodyParser.urlencoded({ extended: true }))
 
 routes(app)
 db_open()

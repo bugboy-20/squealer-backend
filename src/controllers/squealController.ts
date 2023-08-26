@@ -34,6 +34,8 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
   } catch (error) {
     // Handle any potential errors during the query
     console.error('getSqueals error: ' + error)
+    res.statusCode = 500;
+    res.end()
     //await fetch(...) TODO
     throw error;
   }
@@ -68,10 +70,12 @@ const postSqueal : RequestHandler = async (req, res) => {
   try {
     let inSqueal : Squeal = req.body
     
+    /*
     inSqueal.impressions = 0;
     inSqueal.positive_reaction = 0;
     inSqueal.negative_reaction = 0;
     inSqueal.datetime = now();
+    */
 
     const squeal = new SquealModel(inSqueal);
     /*const existingUser = await UserModel.findOne({ username: user.username }).exec();

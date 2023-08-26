@@ -1,9 +1,17 @@
-import mongoose, { Schema, Document } from 'mongoose'; //l'ha fatto ChatGPT 
+import mongoose, { Schema, Document, now } from 'mongoose'; //l'ha fatto ChatGPT 
+
+enum ContentType {
+  Text = 'text',
+  Media = 'media'
+}
 
 interface Squeal extends Document {
   receivers: string[],
   author: string,
-  body: string// | img | video | geolocazione,
+  body: {
+    type: ContentType,
+    content: string
+  },
   datetime: Date,
   impressions: number,
   positive_reaction: number,
@@ -14,7 +22,10 @@ interface Squeal extends Document {
 interface Squeal {
   receivers: string[],
   author: string,
-  body: string// | img | video | geolocazione,
+  body: {
+    type: ContentType,
+    content: string
+  },
   category: string[],
 }
 
@@ -29,31 +40,43 @@ const squealSchema: Schema<Squeal> = new Schema<Squeal>({
     required: true
   }],
   body: {
-    type: String,
-    required: true
+    type: {
+      type: String,
+      enum: [ContentType.Media, ContentType.Text],
+      required: true
+    },
+    content: {
+      type: String,
+      required: true
+    }
   },
   datetime: { 
     type: Date,
-    required: true
+    required: true,
+    default: now()
   },
   impressions: {
     type: Number,
+    default: 0,
     required: true
   },
   positive_reaction: {
     type: Number,
+    default: 0,
     required: true
   },
   negative_reaction: {
     type: Number,
+    default: 0,
     required: true
   },
   category: [{
     type: String,
-    required: true
+    required: true,
+    default: []
   }],
 });
 
 const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
 
-export {Squeal,SquealModel}
+export {Squeal,SquealModel, squealSchema}

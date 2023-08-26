@@ -6,10 +6,15 @@ interface User extends Document {
   firstname: string;
   lastname: string;
   password: string;
-  type?: 'standard' | 'professional' | 'moderator';
-  SMM?: string | null;
-  verified?: boolean;
-  quote_modifier?: number;
+  type: 'standard' | 'professional' | 'moderator';
+  SMM: string | null;
+  verified: boolean;
+  quote_modifier: number;
+  quote: {
+    day: number;
+    week: number;
+    month: number;
+  }
 }
 
 const userSchema: Schema<User> = new Schema<User>({
@@ -38,19 +43,34 @@ const userSchema: Schema<User> = new Schema<User>({
   },
   type: {
     type: String,
+    required: true,
     enum: ['standard', 'professional', 'moderator']
   },
   SMM: {
     type: String,
-    format: 'uuid',
+    default: null,
     nullable: true
   },
   verified: {
+    required: true,
     type: Boolean
   },
   quote_modifier: {
+    required: true,
     type: Number
+  },
+  quote: {
+    day: {
+      type: Number
+    },
+    week: {
+      type: Number
+    },
+    month: {
+      type: Number
+    }
   }
+
 });
 
 const UserModel = mongoose.model<User>('User', userSchema);

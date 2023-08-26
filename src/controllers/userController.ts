@@ -2,6 +2,7 @@
 import {hash} from 'bcrypt';
 import {RequestHandler} from 'express';
 import {User,UserModel} from '../models/userModel'
+import {userBackToFront, userFrontToBack} from '../utils/userUtils';
 
 const listAllUsers : RequestHandler = async (req, res) => {
   try {
@@ -9,7 +10,7 @@ const listAllUsers : RequestHandler = async (req, res) => {
      res.writeHead(200, {
       'Content-Type': 'application/json',
     });
-    let json = JSON.stringify(users);
+    let json = JSON.stringify(users.map(u => userBackToFront(u)));
     res.end(json);
     //res.status(200).json(logs);
     //res.json(logs);
@@ -25,12 +26,17 @@ const listAllUsers : RequestHandler = async (req, res) => {
 const findUser : RequestHandler = async (req, res) => {
   try {
     const username = req.params.username;
-    const user = await UserModel.findOne({username}).exec();
-     res.writeHead(200, {
-      'Content-Type': 'application/json',
-    });
-    let json = JSON.stringify(user);
-    res.end(json);
+    const user =  await UserModel.findOne({username}).exec();
+    if(user) {
+       res.writeHead(200, {
+        'Content-Type': 'application/json',
+      });
+      let json = JSON.stringify(userBackToFront(user));
+      res.end(json);
+    } else {
+      res.statusCode = 404
+      res.end();
+    }
     //res.status(200).json(logs);
     //res.json(logs);
   } catch (error) {
@@ -45,12 +51,12 @@ const findUser : RequestHandler = async (req, res) => {
 const addUser : RequestHandler = async (req, res) => {
 
   try {
-    const user = new UserModel(req.body);
+    const user = userFrontToBack(req.body)
     const existingUser = await UserModel.findOne({ username: user.username }).exec();
 
     if (existingUser) {
       res.statusCode = 409
-      return res.json({ message: 'Username already taken' });
+      return res.end({ message: 'Username already taken' });
     }
 
     //res.sendStatus(202)
@@ -58,8 +64,10 @@ const addUser : RequestHandler = async (req, res) => {
     const savedUser = await user.save();
     res
       .writeHead(201, {'Content-Type': 'application/json'})
-      .end(JSON.stringify(savedUser));
+      .end(JSON.stringify(userBackToFront( savedUser)));
   } catch(e) {
+    res.statusCode = 500
+    res.end()
     console.error('addUser error: ' + e)
   }
 
