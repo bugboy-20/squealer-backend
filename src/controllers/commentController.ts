@@ -1,8 +1,8 @@
 import {RequestHandler} from "express";
 import { Comment, CommentModel } from "../models/commentModel"
+import {catchServerError} from "../utils/controllersUtils";
 
-const postComment : RequestHandler = async (req, res) => {
-  try {
+const postComment : RequestHandler = catchServerError( async (req, res) => {
     let comment : Comment = new CommentModel(req.body)
     const savedComment = await comment.save()
 
@@ -13,15 +13,9 @@ const postComment : RequestHandler = async (req, res) => {
 
 
 
-  } catch (e) {
-    res.statusCode = 500
-    res.end()
-    console.error(e)
-  }
-}
+  })
 
-const getComments : RequestHandler = async (req, res) => {
-  try {
+const getComments : RequestHandler = catchServerError( async (req, res) => {
     const refID = req.params.squealID;
 
     const comments = CommentModel.find({ reference: refID })
@@ -31,12 +25,8 @@ const getComments : RequestHandler = async (req, res) => {
       'Content-Type': 'application/json'
     })
     res.end(j)
-  } catch (e) {
-    res.statusCode = 500
-    res.end()
-  }
-}
+})
 
 
 
-export { postComment }
+export { postComment, getComments}

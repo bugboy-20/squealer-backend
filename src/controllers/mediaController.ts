@@ -2,10 +2,10 @@ import multer from 'multer'; // For handling multipart/form-data
 import path from 'path';
 import {RequestHandler} from 'express';
 import {send501} from '../utils/statusSenders';
+import {catchServerError} from '../utils/controllersUtils';
 
 
-const uploadMedia : RequestHandler = async (req,res) => {
-  try {
+const uploadMedia : RequestHandler = catchServerError( async (req,res) => {
     if (!req.file) {
       res.statusCode = 400;
       return res.end(JSON.stringify({ message: 'No media file uploaded' }));
@@ -18,12 +18,10 @@ const uploadMedia : RequestHandler = async (req,res) => {
     res.statusCode = 200;
     res.end(JSON.stringify({ url: mediaUrl }))
 
-  } catch (error) {
-    console.error('Error occurred while uploading media:', error);
-    res.statusCode = 500;
-    res.end(JSON.stringify({ message: 'Internal Server Error' }));
   }
-}
+  ,500
+  ,'Error occurred while uploading media:'
+  ,JSON.stringify({ message: 'Internal Server Error' }))
 
 const getMedia : RequestHandler = send501;
 

@@ -1,9 +1,9 @@
 import {RequestHandler} from "express";
 import {now, Query} from "mongoose";
 import {Squeal, SquealModel} from "../models/squealModel";
+import {catchServerError} from "../utils/controllersUtils";
 
-const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare il codice query, channels non esiste
-  try {
+const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     let squeals = SquealModel.find()
 
@@ -31,24 +31,15 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
     let json = JSON.stringify(await squeals.exec());
     res.end(json);
 
-  } catch (error) {
-    // Handle any potential errors during the query
-    console.error('getSqueals error: ' + error)
-    res.statusCode = 500;
-    res.end()
-    //await fetch(...) TODO
-    throw error;
-  }
-}
+  })
 
-const updateSqueal : RequestHandler = async (req, res) => { //TODO
+const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO
 
 
   let squealID = req.params.id;
   let opType = req.body.op;
   let dbRes;
   
-  try {
     switch (req.body.op) {
       case "viewed":
         opType = { $inc: {"impressions":1}}; break
@@ -61,17 +52,11 @@ const updateSqueal : RequestHandler = async (req, res) => { //TODO
 
     dbRes = SquealModel.findByIdAndUpdate( squealID, opType, { new: true});
     res.end(JSON.stringify(await dbRes?.exec()))
-  } catch(e) {
-    console.error(e)
-    res.statusCode = 500;
-    res.end('errore non aggiornato')
-  }
 
-}
+})
 
-const postSqueal : RequestHandler = async (req, res) => {
+const postSqueal : RequestHandler = catchServerError( async (req, res) => {
 
-  try {
     let inSqueal : Squeal = req.body
     
     /*
@@ -94,29 +79,17 @@ const postSqueal : RequestHandler = async (req, res) => {
     res
       .writeHead(201, {'Content-Type': 'application/json'})
       .end(JSON.stringify(savedSqueal));
-  } catch(e) {
-    console.error('postSqueal error: ' + e)
-    res.statusCode = 400
-    res.end()
-  }
+  },400,'postSqueal error: ')
 
-}
+const deleteSqueal : RequestHandler = catchServerError( async (req, res) => {
 
-const deleteSqueal : RequestHandler = async (req, res) => {
-
-  try {
     const id  = req.params.id
 
     await SquealModel.deleteOne({ _id : id})
     
 
     res.end({ log: `${id} deleted`})
-  } catch(e) {
-    console.error(e)
-    res.statusCode = 500
-    res.end()
-  }
-}
+})
 
 
 export {postSqueal, getSqueals, deleteSqueal, updateSqueal};

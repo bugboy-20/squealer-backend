@@ -3,9 +3,9 @@ import {hash} from 'bcrypt';
 import {RequestHandler} from 'express';
 import {User,UserModel} from '../models/userModel'
 import {userBackToFront, userFrontToBack} from '../utils/userUtils';
+import { catchServerError } from '../utils/controllersUtils';
 
-const listAllUsers : RequestHandler = async (req, res) => {
-  try {
+const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
     const users: User[] = await UserModel.find().exec();
      res.writeHead(200, {
       'Content-Type': 'application/json',
@@ -14,17 +14,9 @@ const listAllUsers : RequestHandler = async (req, res) => {
     res.end(json);
     //res.status(200).json(logs);
     //res.json(logs);
-  } catch (error) {
-    // Handle any potential errors during the query
-    console.error('listAllUsers error: ' + error)
-    //await fetch(...) TODO
-    throw error;
-  }
-}
+  },500,'listAllUsers error: ')
 
-
-const findUser : RequestHandler = async (req, res) => {
-  try {
+const findUser : RequestHandler = catchServerError( async (req, res) => {
     const username = req.params.username;
     const user =  await UserModel.findOne({username}).exec();
     if(user) {
@@ -39,17 +31,10 @@ const findUser : RequestHandler = async (req, res) => {
     }
     //res.status(200).json(logs);
     //res.json(logs);
-  } catch (error) {
-    // Handle any potential errors during the query
-    console.error('findUser error: ' + error)
-    //await fetch(...) TODO
-    throw error;
-  }
-}
+  },500,'findUser error: ')
 
 
-const getQuote : RequestHandler = async (req, res) => {
-  try {
+const getQuote : RequestHandler = catchServerError( async (req, res) => {
     const user : User | null = await UserModel.findOne({ username: req.params.username }).exec()
     if (!user) {
       res.statusCode = 404
@@ -59,18 +44,12 @@ const getQuote : RequestHandler = async (req, res) => {
 
     const retUsr = userBackToFront(user).quota;
     res.end(JSON.stringify(retUsr))
-  } catch(e) {
-    console.error(e)
-    res.statusCode = 500
-    res.end()
-  }
-}
+})
 
 
 
-const addUser : RequestHandler = async (req, res) => {
+const addUser : RequestHandler = catchServerError( async (req, res) => {
 
-  try {
     const user = userFrontToBack(req.body)
     const existingUser = await UserModel.findOne({ username: user.username }).exec();
 
@@ -85,16 +64,10 @@ const addUser : RequestHandler = async (req, res) => {
     res
       .writeHead(201, {'Content-Type': 'application/json'})
       .end(JSON.stringify(userBackToFront( savedUser)));
-  } catch(e) {
-    res.statusCode = 500
-    res.end()
-    console.error('addUser error: ' + e)
-  }
 
-}
+})
 
-const deleteUser : RequestHandler = async (req, res) => {
-  try {
+const deleteUser : RequestHandler = catchServerError( async (req, res) => {
     const username = req.params.username;
     const deletedUser = await UserModel.findOneAndDelete({ username }).exec();
     if (deletedUser) {
@@ -112,11 +85,7 @@ const deleteUser : RequestHandler = async (req, res) => {
       console.log(`User with username '${username}' not found.`);
       return false;
     }
-  } catch (error) {
-    console.error('Error occurred while deleting user:', error);
-    return false;
-  }
-}
+})
 
 
 export {listAllUsers,addUser, deleteUser, findUser, getQuote};
