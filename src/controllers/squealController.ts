@@ -7,8 +7,8 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
 
     let squeals = SquealModel.find()
 
-    if ( req.params._id )
-      squeals.find({ _id : req.params._id})
+    if ( req.params.id )
+      squeals.findById(req.params.id)
     if ( req.params.channel)
       squeals.find({ receivers: req.params.channel});
     if ( req.query.author)
@@ -51,12 +51,12 @@ const updateSqueal : RequestHandler = async (req, res) => { //TODO
   try {
     switch (req.body.op) {
       case "viewed":
-        opType = { $inc: {"impressions":1}}
+        opType = { $inc: {"impressions":1}}; break
       case "upvote":
-        opType = { $inc: {"positive_reaction":1}}
+        opType = { $inc: {"positive_reaction":1}}; break
       case "downvote":
-        opType = { $inc: {"negative_reaction":1}}
-      default: res.statusCode = 400; opType = {};
+        opType = { $inc: {"negative_reaction":1}}; break
+      default: res.statusCode = 400; opType = {}; break
     }
 
     dbRes = SquealModel.findByIdAndUpdate( squealID, opType, { new: true});

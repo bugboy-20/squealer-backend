@@ -48,6 +48,26 @@ const findUser : RequestHandler = async (req, res) => {
 }
 
 
+const getQuote : RequestHandler = async (req, res) => {
+  try {
+    const user : User | null = await UserModel.findOne({ username: req.params.username }).exec()
+    if (!user) {
+      res.statusCode = 404
+      res.end()
+      return
+    }
+
+    const retUsr = userBackToFront(user).quota;
+    res.end(JSON.stringify(retUsr))
+  } catch(e) {
+    console.error(e)
+    res.statusCode = 500
+    res.end()
+  }
+}
+
+
+
 const addUser : RequestHandler = async (req, res) => {
 
   try {
@@ -99,4 +119,4 @@ const deleteUser : RequestHandler = async (req, res) => {
 }
 
 
-export {listAllUsers,addUser, deleteUser, findUser};
+export {listAllUsers,addUser, deleteUser, findUser, getQuote};
