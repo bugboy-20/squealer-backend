@@ -13,7 +13,6 @@ const catchServerError = function (f: RequestHandler, errorCode = 500, errorMess
       console.error(e)
       res.statusCode = errorCode
       res.end(responce)
-      res
     }
   }
 
