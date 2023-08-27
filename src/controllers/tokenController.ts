@@ -1,5 +1,6 @@
 import {RequestHandler} from "express";
 import {sign, Secret} from "jsonwebtoken";
+import {User, UserModel} from "../models/userModel";
 import {userLogin} from "../utils/authorisation";
 
 const getToken : RequestHandler = async (req,res) => {
@@ -9,16 +10,19 @@ const getToken : RequestHandler = async (req,res) => {
     res.end("unathorized")
     return
   }
-
-  const infos = { name : username }
-
-
-  const accessToken = sign(infos, process.env.ACCESS_TOKEN_SECRET as string, {expiresIn : '30min' })
+  try {
   
-  const asd = sign
+  const infos = { username }
+  const accessToken = sign(infos, process.env.ACCESS_TOKEN_SECRET as string, {expiresIn: '1h' })
+  
+  
 
   res.end(accessToken)
-
+  } catch(e) {
+    console.error(e)
+    res.statusCode = 500
+    res.end()
+  }
 }
 
 export { getToken }

@@ -44,22 +44,26 @@ const getSqueals : RequestHandler = async (req, res) => { // TODO generalizzare 
 const updateSqueal : RequestHandler = async (req, res) => { //TODO
 
 
-  let squealID : number = +req.params._id;
+  let squealID = req.params.id;
   let opType = req.body.op;
   let dbRes;
   
   try {
-    switch (opType) {
+    switch (req.body.op) {
       case "viewed":
-        dbRes = await SquealModel.updateOne({"_id": squealID}, { $inc: {"impressions":1}}); break;
+        opType = { $inc: {"impressions":1}}
       case "upvote":
-        dbRes = await SquealModel.updateOne({"_id": squealID}, { $inc: {"positive_reaction":1}}); break;
+        opType = { $inc: {"positive_reaction":1}}
       case "downvote":
-        dbRes = await SquealModel.updateOne({"_id": squealID}, { $inc: {"negative_reaction":-1}}); break; //TODO controllare funzioni
+        opType = { $inc: {"negative_reaction":1}}
+      default: res.statusCode = 400; opType = {};
     }
-    res.end(JSON.stringify(dbRes))
+
+    dbRes = SquealModel.findByIdAndUpdate( squealID, opType, { new: true});
+    res.end(JSON.stringify(await dbRes?.exec()))
   } catch(e) {
-    res.statusCode = 400;
+    console.error(e)
+    res.statusCode = 500;
     res.end('errore non aggiornato')
   }
 
