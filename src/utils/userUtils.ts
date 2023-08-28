@@ -29,7 +29,6 @@ function userBackToFront(user: User ) : userRead_t {
 
 function userFrontToBack(userTmp: userWrite_t) : User {
   const user = userWriteSchema.parse(userTmp)
-  // TODO aggiungere il parsing?
   const userBack = {
     username: user.username,
     email: user.email,
@@ -41,9 +40,9 @@ function userFrontToBack(userTmp: userWrite_t) : User {
     verified: false,
     quote_modifier: 1,
     quote: {
-      day: +(process.env.CHAR_PER_DAY as string),
-      week: +(process.env.CHAR_PER_WEEK as string),
-      month: +(process.env.CHAR_PER_MONTH as string)
+      day: 0,
+      week: 0,
+      month: 0
     }
   }
 
