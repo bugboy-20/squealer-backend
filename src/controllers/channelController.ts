@@ -31,6 +31,29 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     if ( req.query.type)
       channels.find({type : req.query.type})
 
+    if ( req.query.official ) {
+      let official : boolean
+      try {
+        official = JSON.parse( req.query.official as string )
+      } catch(_) {
+        res.statusCode = 417
+        res.end({ error: `official has to be boolean, found ${req.query.official}`})
+        return
+      }
+      if (official)
+        channels.find({
+          name: {
+            $regex: /^§[A-Z]+.*$/
+          }
+        })
+      else
+        channels.find({
+          name: {
+            $regex: /^§[a-z]+.*$/
+          }
+        })
+    }
+
 
     res.writeHead(200, {
       'Content-Type': 'application/json',
