@@ -8,6 +8,7 @@
  *  come gestire gli squeal con immagini?
  *  
  *  
+ *  scheduling 
  *
  *  valutare Zod e autogenerazione della API doc
  */
@@ -26,6 +27,7 @@ import routes from "./routes/routes";
 import cors from "cors"
 import {send404, send501} from "./utils/statusSenders";
 import {verifyToken} from './utils/authorisation';
+import schedules from './schedules/schedules';
 
 const app = polka({
                  onNoMatch: send404,
@@ -45,6 +47,7 @@ app
 
 routes(app)
 db_open()
+schedules()
 
 app
   .get('/api/help', (_, res) => res.end('Hello World!'))
