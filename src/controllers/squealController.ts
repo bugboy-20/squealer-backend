@@ -1,5 +1,4 @@
 import {RequestHandler} from "express";
-import {now, Query} from "mongoose";
 import {Squeal, SquealModel} from "../models/squealModel";
 import {catchServerError} from "../utils/controllersUtils";
 
@@ -7,10 +6,11 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     let squeals = SquealModel.find()
 
+    console.log(req.params.id)
     if ( req.params.id )
-      squeals.findById(req.params.id)
-    if ( req.params.channel)
-      squeals.find({ receivers: req.params.channel});
+      squeals.find({_id: req.params.id})
+    if ( req.params.channelName)
+      squeals.find({ receivers: req.params.channelName});
     if ( req.query.author)
       squeals.find({ author:  req.query.author});
     if ( req.query.channel)
@@ -50,7 +50,7 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
       default: res.statusCode = 400; opType = {}; break
     }
 
-    dbRes = SquealModel.findByIdAndUpdate( squealID, opType, { new: true});
+    dbRes = SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true});
     res.end(JSON.stringify(await dbRes?.exec()))
 
 })

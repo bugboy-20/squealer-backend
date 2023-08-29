@@ -37,7 +37,7 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
         official = JSON.parse( req.query.official as string )
       } catch(_) {
         res.statusCode = 417
-        res.end({ error: `official has to be boolean, found ${req.query.official}`})
+        res.end(JSON.stringify( { error: `official has to be boolean, found "${req.query.official}"`}))
         return
       }
       if (official)
