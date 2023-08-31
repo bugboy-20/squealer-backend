@@ -1,19 +1,17 @@
-/*
-import * as filePluginLib from "mongoose-file"
+import mongoose, { Schema, Document } from 'mongoose';
 
-var filePlugin = filePluginLib.filePlugin;
-var make_upload_to_model = filePluginLib.make_upload_to_model;
+interface Media extends Document {
+  filename: string;
+  contentType: string;
+  fileId: mongoose.Types.ObjectId;
+}
 
-var uploads_base = path.join(__dirname, "uploads");
-var uploads = path.join(uploads_base, "u");
- 
-var SampleSchema = new Schema({
+const mediaSchema = new Schema<Media>({
+  filename: String,
+  contentType: String,
+  fileId: Schema.Types.ObjectId,
 });
 
-SampleSchema.plugin(filePlugin, {
-    name: "photo",
-    upload_to: make_upload_to_model(uploads, 'photos'),
-    relative_to: uploads_base
-});
-var SampleModel = db.model("SampleModel", SampleSchema);
-*/
+const MediaModel = mongoose.model<Media>('Media', mediaSchema);
+
+export { Media, MediaModel };

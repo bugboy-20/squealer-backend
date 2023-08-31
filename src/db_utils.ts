@@ -34,5 +34,12 @@ async function db_op(collectionName : string , op : Function) {
 
 }
 const db_access = db_op;*/
-export { db_open, db_close }
+
+// non so se è corretto dichiarare bucket qui
+// però è usato in entrambi i metodi in mediaControllers e ridichiararlo mi sembra brutto
+const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+  bucketName: 'media',
+});
+
+export { db_open, db_close, bucket }
 
