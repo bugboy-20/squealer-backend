@@ -35,8 +35,7 @@ const app = polka({
 })
 
 console.log(process.env)
-console.log(__dirname)
-
+console.log(new Date(Date.now()))
 app
   .use(cors())
   //.use(verifyToken)
