@@ -42,7 +42,7 @@ const uploadMedia: RequestHandler = catchServerError(
   },
   500,
   'Error occurred while uploading media:'
-);
+  ,()=>{});
 
 const getMedia: RequestHandler = catchServerError((req, res) => {
   let fileId;
