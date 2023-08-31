@@ -21,7 +21,7 @@ const uploadMedia : RequestHandler = catchServerError( async (req,res) => {
   }
   ,500
   ,'Error occurred while uploading media:'
-  ,JSON.stringify({ message: 'Internal Server Error' }))
+)
 
 const getMedia : RequestHandler = send501;
 
