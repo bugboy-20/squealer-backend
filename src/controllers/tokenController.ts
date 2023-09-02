@@ -2,7 +2,7 @@ import { compare } from 'bcrypt';
 import cookie from 'cookie';
 import { RequestHandler } from 'express';
 import { sign, verify } from 'jsonwebtoken';
-import { User, UserModel } from '../models/userModel';
+import { UserModel } from '../models/userModel';
 import { payloadCheck } from '../utils/authorisation';
 import { catchServerError } from '../utils/controllersUtils';
 import { send204, send401, send403 } from '../utils/statusSenders';
@@ -25,7 +25,7 @@ const getToken: RequestHandler = catchServerError(async (req, res) => {
     );
   }
 
-  const user: User | null = await UserModel.findOne({ username }).exec();
+  const user = await UserModel.findOne({ username }).exec();
 
   if (!user || !(await compare(password, user.password)))
     return send401(req, res);
@@ -42,7 +42,9 @@ const getToken: RequestHandler = catchServerError(async (req, res) => {
     { expiresIn: refreshTokenExpiresIn }
   );
 
-  // TODO: Scrivere il refresh token nel db all'intero della tabella users
+  // save the refresh token in db with the user
+  user.refreshToken = refreshToken;
+  await user.save();
 
   // send access token and refresh token as cookie
   res.writeHead(200, {
@@ -60,7 +62,7 @@ const getRefreshToken: RequestHandler = async (req, res) => {
   if (!cookies?.jwt) return send401(req, res);
   const refreshToken: string = cookies.jwt;
 
-  const user: User | null = await UserModel.findOne({ refreshToken }).exec();
+  const user = await UserModel.findOne({ refreshToken }).exec();
   if (!user) return send403(req, res);
 
   verify(
@@ -89,8 +91,8 @@ const deleteToken: RequestHandler = catchServerError(async (req, res) => {
   if (!cookies?.jwt) return send204(req, res); //No content
   const refreshToken = cookies.jwt;
 
-  // Is refreshToken in db?
-  const user: User | null = await UserModel.findOne({ refreshToken }).exec();
+  // is refreshToken in db?
+  const user = await UserModel.findOne({ refreshToken }).exec();
 
   if (!user) {
     // TODO: non so se clearCookie funziona
@@ -98,11 +100,9 @@ const deleteToken: RequestHandler = catchServerError(async (req, res) => {
     return send204(req, res);
   }
 
-  // TODO: Delete refreshToken in db, non so se così funziona
-  await UserModel.updateOne(
-    { username: user.username },
-    { $unset: { refreshToken: 1 } }
-  ).exec();
+  // delete refreshToken in db
+  user.refreshToken = undefined;
+  await user.save();
 
   res.clearCookie('jwt', cookieOptions);
   send204(req, res);

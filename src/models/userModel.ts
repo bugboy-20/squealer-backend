@@ -15,6 +15,7 @@ interface User extends Document {
     week: number;
     month: number;
   }
+  refreshToken?: string;
 }
 
 const userSchema: Schema<User> = new Schema<User>({
@@ -69,7 +70,8 @@ const userSchema: Schema<User> = new Schema<User>({
     month: {
       type: Number
     }
-  }
+  },
+  refreshToken: String
 
 });
 
