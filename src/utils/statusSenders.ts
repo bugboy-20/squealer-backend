@@ -10,4 +10,14 @@ const send501 : RequestHandler = (req, res) => {
   res.end('501 - Not implemented');
 }
 
-export {send404, send501};
+const send401 : RequestHandler = (req, res) => {
+  res.statusCode = 401;
+  res.end('401 - Unauthorized');
+}
+
+const send403 : RequestHandler = (req, res) => {
+  res.statusCode = 403;
+  res.end('403 - Forbidden');
+}
+
+export {send404, send501, send401, send403};

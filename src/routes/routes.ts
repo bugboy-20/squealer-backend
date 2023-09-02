@@ -5,11 +5,13 @@ import logRoutes from "./logRoutes";
 import squealRoutes from "./squealRouter";
 import tokenRoutes from "./tokenRoutes";
 import userRoutes from "./userRoutes";
+import refreshRoutes from "./refreshRouter";
 
 let routelist : Array<(a : polka.Polka) => void> = [
     userRoutes,
     logRoutes,
     tokenRoutes,
+    refreshRoutes,
     squealRoutes,
     channelRoutes,
     serverInfo
