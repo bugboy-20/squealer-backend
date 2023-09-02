@@ -1,7 +1,7 @@
 
 
 import polka from "polka"
-import {getRefreshToken} from "../controllers/refreshTokenController";
+import {getRefreshToken} from "../controllers/tokenController";
 
 const refreshRoutes : (app : polka.Polka) => void = app => {
     app

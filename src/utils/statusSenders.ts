@@ -20,4 +20,9 @@ const send403 : RequestHandler = (req, res) => {
   res.end('403 - Forbidden');
 }
 
-export {send404, send501, send401, send403};
+const send204 : RequestHandler = (req, res) => {
+  res.statusCode = 204;
+  res.end('204 - No Content');
+}
+
+export {send204, send404, send501, send401, send403};
