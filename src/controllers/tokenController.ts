@@ -15,6 +15,7 @@ const cookieOptions: cookie.CookieSerializeOptions = {
 
 const accessTokenExpiresIn = '5m';
 const refreshTokenExpiresIn = '1d';
+const refreshTokenMaxAge = 24 * 60 * 60 * 1000; // 1 day
 
 const getToken: RequestHandler = catchServerError(async (req, res) => {
   const { username, password } = req.body;
@@ -36,39 +37,82 @@ const getToken: RequestHandler = catchServerError(async (req, res) => {
     process.env.ACCESS_TOKEN_SECRET as string,
     { expiresIn: accessTokenExpiresIn }
   );
-  const refreshToken = sign(
+  const newRefreshToken = sign(
     { username: user.username },
     process.env.REFRESH_TOKEN_SECRET as string,
     { expiresIn: refreshTokenExpiresIn }
   );
 
+  let newRefreshTokenArray = !req.cookies?.jwt
+    ? user.refreshToken
+    : user.refreshToken.filter((rt) => rt !== req.cookies.jwt);
+
+  if (req.cookies?.jwt) {
+    const refreshToken = req.cookies.jwt;
+    const foundToken = await UserModel.findOne({ refreshToken }).exec();
+
+    if (!foundToken) newRefreshTokenArray = [];
+
+    // TODO: non so se clearCookie funziona
+    res.clearCookie('jwt', cookieOptions);
+  }
+
   // save the refresh token in db with the user
-  user.refreshToken = refreshToken;
+  user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
   await user.save();
 
   // send access token and refresh token as cookie
   res.writeHead(200, {
     'Content-Type': 'text/plain',
-    'Set-Cookie': cookie.serialize('jwt', refreshToken, {
+    'Set-Cookie': cookie.serialize('jwt', newRefreshToken, {
       ...cookieOptions,
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: refreshTokenMaxAge,
     }),
   });
   res.end(accessToken);
 });
 
 const getRefreshToken: RequestHandler = async (req, res) => {
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return send401(req, res);
-  const refreshToken: string = cookies.jwt;
+  if (!req.cookies?.jwt) return send401(req, res);
+  const refreshToken: string = req.cookies.jwt;
+  // TODO: non so se clearCookie funziona
+  res.clearCookie('jwt', cookieOptions);
 
   const user = await UserModel.findOne({ refreshToken }).exec();
-  if (!user) return send403(req, res);
+
+  // detected refresh token reuse
+  if (!user) {
+    verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string,
+      async (err, decoded) => {
+        if (err || !payloadCheck(decoded, true)) return send403(req, res);
+        // if someone is reusing a refresh token, there is a problem
+        // we delete every refresh token of that user
+        const hackedUser = await UserModel.findOne({
+          username: decoded.username,
+        }).exec();
+
+        if (!hackedUser) return send403(req, res);
+        hackedUser.refreshToken = [];
+        await hackedUser.save();
+      }
+    );
+    return send403(req, res);
+  }
+
+  const newRefreshTokenArray = user.refreshToken.filter(
+    (rt) => rt !== refreshToken
+  );
 
   verify(
     refreshToken,
     process.env.REFRESH_TOKEN_SECRET as string,
-    (err, decoded) => {
+    async (err, decoded) => {
+      if (err) {
+        user.refreshToken = [...newRefreshTokenArray];
+        await user.save();
+      }
       if (
         err ||
         !payloadCheck(decoded, true) ||
@@ -81,6 +125,25 @@ const getRefreshToken: RequestHandler = async (req, res) => {
         process.env.ACCESS_TOKEN_SECRET as string,
         { expiresIn: accessTokenExpiresIn }
       );
+
+      const newRefreshToken = sign(
+        { username: user.username },
+        process.env.REFRESH_TOKEN_SECRET as string,
+        { expiresIn: refreshTokenExpiresIn }
+      );
+
+      // save the new refresh token in db with the user
+      user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
+      await user.save();
+
+      res.writeHead(200, {
+        'Content-Type': 'text/plain',
+        'Set-Cookie': cookie.serialize('jwt', newRefreshToken, {
+          ...cookieOptions,
+          maxAge: refreshTokenMaxAge,
+        }),
+      });
+
       res.end(accessToken);
     }
   );
@@ -101,7 +164,7 @@ const deleteToken: RequestHandler = catchServerError(async (req, res) => {
   }
 
   // delete refreshToken in db
-  user.refreshToken = undefined;
+  user.refreshToken = user.refreshToken.filter((rt) => rt !== refreshToken);
   await user.save();
 
   res.clearCookie('jwt', cookieOptions);
