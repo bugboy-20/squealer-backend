@@ -12,8 +12,6 @@ const uploadMedia: RequestHandler = catchServerError(
       return res.end(JSON.stringify({ message: 'No media file uploaded' }));
     }
 
-    // TODO Here, you can process the uploaded media file if needed
-
     const uploadStream = bucket.openUploadStream(file.originalname);
     const id = uploadStream.id;
     // non sono sicuro che possa leggere direttamente file.buffer, ho una soluzione alternativa in caso questo non vada
