@@ -12,8 +12,8 @@ export const verifyJWT: RequestHandler = (req, res, next) => {
 
     req.params = {
       ...req.params,
-      username: decoded.username,
-      type: decoded.type,
+      authUsername: decoded.username,
+      authUsertype: decoded.type,
     };
     next();
   });
