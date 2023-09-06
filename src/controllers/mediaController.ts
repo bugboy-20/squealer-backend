@@ -31,12 +31,13 @@ const uploadMedia: RequestHandler = catchServerError(
     });
     mediaMetadata.save();
 
-    const mediaUrl = `${req.headers.origin}/api/media/${id}`;
+    
+    const mediaUrl = `https://${process.env.VIRTUAL_HOST}/api/media/${id}`;
 
-    res.statusCode = 200;
-    res.end(
-      JSON.stringify({ message: 'File uploaded successfully', url: mediaUrl })
-    );
+    res.writeHead(200, {
+      'Content-Type': 'text/plain'
+    })
+    res.end(mediaUrl);
   },
   500,
   'Error occurred while uploading media:'

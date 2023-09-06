@@ -15,6 +15,13 @@ async function db_open() {
     .then(
         () =>  console.log('Connesso, yeee'),
         (err) => console.error('Error:' + err)
+    ).then(
+     () => {
+         bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+          bucketName: 'media',
+        });
+
+     }
     )
 
 }
@@ -37,9 +44,6 @@ const db_access = db_op;*/
 
 // non so se è corretto dichiarare bucket qui
 // però è usato in entrambi i metodi in mediaControllers e ridichiararlo mi sembra brutto
-const bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-  bucketName: 'media',
-});
-
+let bucket : mongoose.mongo.GridFSBucket;
 export { db_open, db_close, bucket }
 
