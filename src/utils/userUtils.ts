@@ -6,6 +6,7 @@ import { userReadSchema, userRead_t, userWriteSchema, userWrite_t } from "../val
 function userBackToFront(user: User ) : userRead_t {
   let userFront = {
     username: user.username,
+    propic: user.propic,
     email: user.email,
     firstname: user.firstname,
     lastname: user.lastname,
@@ -31,6 +32,7 @@ function userFrontToBack(userTmp: userWrite_t) : User {
   const user = userWriteSchema.parse(userTmp)
   const userBack = {
     username: user.username,
+    propic: user.propic,
     email: user.email,
     firstname: user.firstname,
     lastname: user.lastname,
