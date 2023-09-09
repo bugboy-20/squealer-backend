@@ -24,7 +24,7 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     let channels = ChannelModel.find()
 
     if( req.params.channelName ) {
-      const channelName = req.params.channelName.replace(/%C2%A7/i, '§') // '§' issue
+      const channelName = req.params.channelName
       channels.find({ name: channelName })
     }
 
