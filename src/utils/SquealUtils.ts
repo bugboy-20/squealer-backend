@@ -1,6 +1,7 @@
 import { SquealSMM , Squeal} from '../models/squealModel'
 function squeal4NormalUser(squealSMM : SquealSMM) : Squeal {
   return {
+    _id: squealSMM._id,
     receivers: squealSMM.receivers,
     author: squealSMM.author,
     body: squealSMM.body,

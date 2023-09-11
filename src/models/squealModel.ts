@@ -6,6 +6,7 @@ enum ContentType {
 }
 
 interface SquealSMM extends Document {
+  _id: string,
   receivers: string[],
   author: string,
   body: {
@@ -20,6 +21,7 @@ interface SquealSMM extends Document {
 }
 
 interface Squeal {
+  _id: string,
   receivers: string[],
   author: string,
   body: {
