@@ -1,7 +1,7 @@
 import mongoose, {Schema} from 'mongoose'
-import { Squeal, squealSchema } from './squealModel'
+import { squealSchema, SquealSMM } from './squealModel'
 
-interface Comment extends Omit<Squeal,'category'> {
+interface Comment extends Omit<SquealSMM,'category'> {
   reference: string,
 }
 

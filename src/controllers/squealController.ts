@@ -1,6 +1,7 @@
 import {RequestHandler} from "express";
 import {Squeal, SquealModel} from "../models/squealModel";
 import {catchServerError} from "../utils/controllersUtils";
+import {squeal4NormalUser} from "../utils/SquealUtils";
 
 const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
@@ -27,12 +28,13 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     res.writeHead(200, {
       'Content-Type': 'application/json',
     });
-    let json = JSON.stringify(await squeals.exec());
+    let json = JSON.stringify((await squeals.exec()).map(s => squeal4NormalUser(s)));
+    //let json = JSON.stringify((await squeals.exec()).map(s => squeal4NormalUser(s)));
     res.end(json);
 
   })
 
-const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO
+const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO gestire con autenticazione
 
 
   let squealID = req.params.id;
@@ -41,11 +43,11 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
   
     switch (req.body.op) {
       case "viewed":
-        opType = { $inc: {"impressions":1}}; break
+        opType = { $push: {"impressions":"@unkonwn"}}; break
       case "upvote":
-        opType = { $inc: {"positive_reaction":1}}; break
+        opType = { $push: {"positive_reaction":"@unkonwn"}}; break
       case "downvote":
-        opType = { $inc: {"negative_reaction":1}}; break
+        opType = { $push: {"negative_reaction":"@unkonwn"}}; break
       default: res.statusCode = 400; opType = {}; break
     }
 
