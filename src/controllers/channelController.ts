@@ -25,7 +25,7 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
 
     if( req.params.channelName ) {
       const channelName = req.params.channelName
-      channels.find({ name: channelName })
+      channels.findOne({ name: channelName })
     }
 
     if ( req.query.type)

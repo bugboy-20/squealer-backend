@@ -5,7 +5,23 @@ enum ContentType {
   Media = 'media'
 }
 
-interface Squeal extends Document {
+interface SquealSMM extends Document {
+  _id: string,
+  receivers: string[],
+  author: string,
+  body: {
+    type: ContentType,
+    content: string
+  },
+  datetime: Date,
+  impressions: string[],
+  positive_reaction: string[],
+  negative_reaction: string[],
+  category: string[], //TODO a cosa serve category?
+}
+
+interface Squeal {
+  _id: string,
   receivers: string[],
   author: string,
   body: {
@@ -30,7 +46,7 @@ interface Squeal {
 }
 
 
-const squealSchema: Schema<Squeal> = new Schema<Squeal>({
+const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   author: {
     type: String,
     required: true
@@ -56,18 +72,18 @@ const squealSchema: Schema<Squeal> = new Schema<Squeal>({
     default: now()
   },
   impressions: {
-    type: Number,
-    default: 0,
+    type: [String],
+    default: [],
     required: true
   },
   positive_reaction: {
-    type: Number,
-    default: 0,
+    type: [String],
+    default: [],
     required: true
   },
   negative_reaction: {
-    type: Number,
-    default: 0,
+    type: [String],
+    default: [],
     required: true
   },
   category: [{
@@ -77,6 +93,6 @@ const squealSchema: Schema<Squeal> = new Schema<Squeal>({
   }],
 });
 
-const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
+const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
-export {Squeal,SquealModel, squealSchema}
+export {Squeal, SquealSMM,SquealModel, squealSchema}

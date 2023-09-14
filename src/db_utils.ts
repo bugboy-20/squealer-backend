@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-import {UserModel, User} from './models/userModel'; // Import your UserModel
-
 const dbName = process.env.DBNAME
 const dbUser = process.env.DBUSER
 const dbPassword = process.env.DBPASSWORD
@@ -13,7 +11,7 @@ async function db_open() {
     mongoose.connect(url, {
                     authSource: 'admin'
     })
-    //.then(() => updateUsersWithDefaultProfilePicUrl())
+    //.then(() => updateUsersWithDefault())
     .then(
         () =>  console.log('Connesso, yeee'),
         (err) => console.error('Error:' + err)
@@ -23,22 +21,26 @@ async function db_open() {
 
 async function db_close() {
 }
-
-/* Lascio qui. nel caso volessimo aggiornare il DB senza resettarlo
-async function updateUsersWithDefaultProfilePicUrl() {
+/*
+// Lascio qui. nel caso volessimo aggiornare il DB senza resettarlo
+async function updateUsersWithDefault() {
   try {
-    const result = await UserModel.find({ profilePicUrl: { $exists: false } }) // Filter for users without profilePicUrl
+    const result = SquealModel.updateMany({}, {
+        $set: {
+            impressions: [],
+            positive_reaction: [],
+            negative_reaction: []
+        }
+    })
+    //const result = await UserModel.find({ profilePicUrl: { $exists: false } }) // Filter for users without profilePicUrl
 
-    result.map(async u => 
-      UserModel.updateOne({_id: u._id}, { $set: { propic: `https://api.dicebear.com/7.x/lorelei/png?seed=${u.username}`}}))
-
-    return Promise.all(result)
+    return result
 
   } catch (error) {
     console.error('Error:', error);
   }
 }
-*/
+
 
 /*
 async function db_op(collectionName : string , op : Function) {
