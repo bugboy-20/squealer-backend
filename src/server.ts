@@ -28,6 +28,8 @@ import cors from "cors"
 import {send404, send501} from "./utils/statusSenders";
 import {verifyToken} from './utils/authorisation';
 import schedules from './schedules/schedules';
+import { credentials } from './middleware/credentials';
+import { corsOptions } from './utils/corsOptions';
 
 const app = polka({
                  onNoMatch: send404,
@@ -37,7 +39,8 @@ const app = polka({
 console.log(process.env)
 console.log(new Date(Date.now()))
 app
-  .use(cors())
+  .use(credentials) // BEFORE CORS
+  .use(cors(corsOptions))
   //.use(verifyToken)
   .use(serve_app)
   .use('/smm',serve_smm, {index: ['index.html']})
