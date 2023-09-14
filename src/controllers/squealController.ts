@@ -6,7 +6,6 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     let squeals = SquealModel.find()
 
-    console.log(req.params.id)
     if ( req.params.id )
       squeals.find({_id: req.params.id})
     if ( req.params.channelName)

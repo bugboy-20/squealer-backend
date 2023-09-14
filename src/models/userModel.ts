@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose'; //l'ha fatto ChatGPT
 
 interface User extends Document {
   username: string;
+  propic: string;
   email: string;
   firstname: string;
   lastname: string;
@@ -23,6 +24,14 @@ const userSchema: Schema<User> = new Schema<User>({
     type: String,
     unique: true,
     required: true
+  },
+  propic: {
+    type: String,
+    format: 'url',
+    default: function () {
+      // Use the username to generate the default URL
+      return `https://api.dicebear.com/7.x/lorelei/png?seed=${this.username}`;
+    }
   },
   email: {
     type: String,
