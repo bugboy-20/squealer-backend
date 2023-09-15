@@ -10,12 +10,12 @@ import { send204, send401, send403 } from '../utils/statusSenders';
 const cookieOptions: cookie.CookieSerializeOptions = {
   httpOnly: true,
   sameSite: 'none',
-  secure: process.env.NODE_ENV === 'production',
+  secure: true,
 };
 
-const accessTokenExpiresIn = '5m';
-const refreshTokenExpiresIn = '1d';
-const refreshTokenMaxAge = 24 * 60 * 60 * 1000; // 1 day
+const accessTokenExpiresIn = '30s';
+const refreshTokenExpiresIn = '1m';
+const refreshTokenMaxAge = 60 //24 * 60 * 60 * 1000; // 1 day
 
 const getToken: RequestHandler = catchServerError(async (req, res) => {
   const { username, password } = req.body;
@@ -73,10 +73,12 @@ const getToken: RequestHandler = catchServerError(async (req, res) => {
 });
 
 const getRefreshToken: RequestHandler = async (req, res) => {
-  if (!req.cookies?.jwt) return send401(req, res);
-  const refreshToken: string = req.cookies.jwt;
+  const cookies = cookie.parse(req.headers.cookie ?? '');
+  if (!cookies?.jwt) return send401(req, res);
+  const refreshToken: string = cookies.jwt;
   // TODO: non so se clearCookie funziona
-  res.clearCookie('jwt', cookieOptions);
+
+  res.setHeader('Set-Cookie', '');
 
   const user = await UserModel.findOne({ refreshToken }).exec();
 
