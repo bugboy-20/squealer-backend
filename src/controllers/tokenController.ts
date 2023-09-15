@@ -15,7 +15,7 @@ const cookieOptions: cookie.CookieSerializeOptions = {
 
 const accessTokenExpiresIn = '30s';
 const refreshTokenExpiresIn = '1m';
-const refreshTokenMaxAge = 60 //24 * 60 * 60 * 1000; // 1 day
+const refreshTokenMaxAge = 60; //24 * 60 * 60 * 1000; // 1 day
 
 const getToken: RequestHandler = catchServerError(async (req, res) => {
   const { username, password } = req.body;
@@ -43,18 +43,19 @@ const getToken: RequestHandler = catchServerError(async (req, res) => {
     { expiresIn: refreshTokenExpiresIn }
   );
 
-  let newRefreshTokenArray = !req.cookies?.jwt
-    ? user.refreshToken
-    : user.refreshToken.filter((rt) => rt !== req.cookies.jwt);
+  const cookies = cookie.parse(req.headers.cookie ?? '');
 
-  if (req.cookies?.jwt) {
-    const refreshToken = req.cookies.jwt;
+  let newRefreshTokenArray = !cookies?.jwt
+    ? user.refreshToken
+    : user.refreshToken.filter((rt) => rt !== cookies.jwt);
+
+  if (cookies?.jwt) {
+    const refreshToken = cookies.jwt;
     const foundToken = await UserModel.findOne({ refreshToken }).exec();
 
     if (!foundToken) newRefreshTokenArray = [];
 
-    // TODO: non so se clearCookie funziona
-    res.clearCookie('jwt', cookieOptions);
+    res.setHeader('Set-Cookie', '');
   }
 
   // save the refresh token in db with the user
@@ -76,8 +77,6 @@ const getRefreshToken: RequestHandler = async (req, res) => {
   const cookies = cookie.parse(req.headers.cookie ?? '');
   if (!cookies?.jwt) return send401(req, res);
   const refreshToken: string = cookies.jwt;
-  // TODO: non so se clearCookie funziona
-
   res.setHeader('Set-Cookie', '');
 
   const user = await UserModel.findOne({ refreshToken }).exec();
@@ -152,7 +151,7 @@ const getRefreshToken: RequestHandler = async (req, res) => {
 };
 
 const deleteToken: RequestHandler = catchServerError(async (req, res) => {
-  const cookies = req.cookies;
+  const cookies = cookie.parse(req.headers.cookie ?? '');
   if (!cookies?.jwt) return send204(req, res); //No content
   const refreshToken = cookies.jwt;
 
@@ -160,8 +159,7 @@ const deleteToken: RequestHandler = catchServerError(async (req, res) => {
   const user = await UserModel.findOne({ refreshToken }).exec();
 
   if (!user) {
-    // TODO: non so se clearCookie funziona
-    res.clearCookie('jwt', cookieOptions);
+    res.setHeader('Set-Cookie', '');
     return send204(req, res);
   }
 
@@ -169,7 +167,7 @@ const deleteToken: RequestHandler = catchServerError(async (req, res) => {
   user.refreshToken = user.refreshToken.filter((rt) => rt !== refreshToken);
   await user.save();
 
-  res.clearCookie('jwt', cookieOptions);
+  res.setHeader('Set-Cookie', '');
   send204(req, res);
 });
 
