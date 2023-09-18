@@ -8,19 +8,14 @@ const uploadMedia: RequestHandler = catchServerError(
   async (req, res) => {
     const file = req.file;
     if (!file) {
-      res.statusCode = 400;
+      res.writeHead(400, {
+        'Content-Type': 'application/json'
+      })
       return res.end(JSON.stringify({ message: 'No media file uploaded' }));
     }
 
     const uploadStream = bucket.openUploadStream(file.originalname);
     const id = uploadStream.id;
-    // non sono sicuro che possa leggere direttamente file.buffer, ho una soluzione alternativa in caso questo non vada
-    /** Alternativa:
-     * const readableMediaStream = new Readable();
-     * readableMediaStream.push(req.file.buffer);
-     * readableMediaStream.push(null);
-     * readableMediaStream.pipe(uploadStream);
-     */
     uploadStream.end(file.buffer);
 
     // Save metadata to Media collection
@@ -48,26 +43,21 @@ const getMedia: RequestHandler = catchServerError((req, res) => {
   try {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
   } catch (err) {
-    res.statusCode = 400;
+    res.writeHead(400, {
+      'Content-Type': 'application/json'
+    })
     return res.end(
       JSON.stringify({ message: 'Invalid media ID in URL parameter' })
     );
   }
 
   const downloadStream = bucket.openDownloadStream(fileId);
-
   downloadStream.pipe(res);
-  /** ALTERNATIVA:
-  downloadStream.on('data', (chunk) => {
-    res.write(chunk);
-  });
 
-  downloadStream.on('end', () => {
-    res.end();
-  });
-*/
   downloadStream.on('error', () => {
-    res.statusCode = 400;
+    res.writeHead(400, {
+      'Content-Type': 'application/json'
+    })
     return res.end(JSON.stringify({ message: 'Error while fetching file' }));
   });
 });
