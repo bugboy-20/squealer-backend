@@ -1,7 +1,7 @@
-import { RequestHandler } from 'express';
+import { Middleware } from 'polka';
 import { send401 } from '../utils/statusSenders';
 
-export const verifyRoles = (...allowedRoles: string[]): RequestHandler => {
+export const verifyRoles = (...allowedRoles: string[]): Middleware => {
   return (req, res, next) => {
     if (!req.params?.authUsertype) {
       return send401(req, res);
