@@ -1,23 +1,18 @@
 import { verify } from 'jsonwebtoken';
 import { Middleware } from 'polka';
 import { payloadCheck } from '../utils/authorisation';
-import { send401, send403 } from '../utils/statusSenders';
+import { send403 } from '../utils/statusSenders';
 
-export const parseJWT = (auth: Middleware, notAuth: Middleware): Middleware => {
-  return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) return notAuth(req, res, next);
+export const parseJWT: Middleware = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith('Bearer ')) {
     req.params = {
       ...req.params,
-      token: authHeader.split(' ')[1],
+      isAuth: 'false',
     };
-    return auth(req, res, next);
-  };
-};
-
-export const verifyJWT = (notAuth: Middleware): Middleware =>
-  parseJWT((req, res, next) => {
-    const token = req.params.token; // guaranteed to be defined
+    next();
+  } else {
+    const token = authHeader.split(' ')[1];
     verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
       if (err || !payloadCheck(decoded, false)) return send403(req, res); //invalid token
 
@@ -29,6 +24,6 @@ export const verifyJWT = (notAuth: Middleware): Middleware =>
       };
       next();
     });
-  }, notAuth);
+  }
+};
 
-export const requireJWT = verifyJWT(send401);
