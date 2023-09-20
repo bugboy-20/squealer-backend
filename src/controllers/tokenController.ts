@@ -80,6 +80,7 @@ const getRefreshToken: RequestHandler = async (req, res) => {
   res.setHeader('Set-Cookie', '');
 
   const user = await UserModel.findOne({ refreshToken }).exec();
+  console.log(`trovato: ${JSON.stringify(user)}`)
 
   // detected refresh token reuse
   if (!user) {
@@ -87,18 +88,25 @@ const getRefreshToken: RequestHandler = async (req, res) => {
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET as string,
       async (err, decoded) => {
-        if (err || !payloadCheck(decoded, true)) return send403(req, res);
+        if (err || !payloadCheck(decoded, true)) {
+          console.log('1')
+          return send403(req, res);
+        }
         // if someone is reusing a refresh token, there is a problem
         // we delete every refresh token of that user
         const hackedUser = await UserModel.findOne({
           username: decoded.username,
         }).exec();
 
-        if (!hackedUser) return send403(req, res);
+        if (!hackedUser) {
+          console.log('2')
+          return send403(req, res);
+        }
         hackedUser.refreshToken = [];
         await hackedUser.save();
       }
     );
+          console.log('3')
     return send403(req, res);
   }
 
@@ -118,8 +126,10 @@ const getRefreshToken: RequestHandler = async (req, res) => {
         err ||
         !payloadCheck(decoded, true) ||
         user.username !== decoded.username
-      )
+      ) {
+          console.log('4')
         return send403(req, res);
+      }
 
       const accessToken = sign(
         { username: decoded.username, type: user.type },

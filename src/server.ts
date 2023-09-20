@@ -30,6 +30,7 @@ import {verifyToken} from './utils/authorisation';
 import schedules from './schedules/schedules';
 import { credentials } from './middleware/credentials';
 import { corsOptions } from './utils/corsOptions';
+import {addJsonFn} from './middleware/resMiddleware';
 
 const app = polka({
                  onNoMatch: send404,
@@ -39,6 +40,7 @@ const app = polka({
 console.log(process.env)
 console.log(new Date(Date.now()))
 app
+  .use(addJsonFn)
   .use(credentials) // BEFORE CORS
   .use(cors(corsOptions))
   //.use(verifyToken)
@@ -57,6 +59,9 @@ app
 
   .get('/api/auth/token', (_) => send501)
 
+  .get('/api/jsonTest', (_,res) => { //TODO eseguire codesta
+    res.json({ status: "success!"})
+  })
   .listen(8000, (err : Error) => {
     if (err) throw err
     console.log(`> Running on localhost:8000`)

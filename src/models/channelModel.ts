@@ -25,10 +25,6 @@ const channelSchema: Schema<Channel> = new Schema<Channel>({
     type: String,
     enum: [ChannelType.Public, ChannelType.Private],
     required: true
-  },
-  subscribed: {
-    type: [String],
-    default: []
   }
 });
 
