@@ -9,6 +9,8 @@ const channelRoutes : (app : polka.Polka) => void = app => {
   .get('/api/channels/:channelName?', escapeParam('channelName'), getChannels)
   .get('/api/channels/:channelName/squeals', escapeParam('channelName'), getSqueals)
   .post('/api/channels/', addChannel)
+  .get('/api/channels/:channelName/subscribers/', send501)
+  .patch('/api/channels/:channelName/subscribers/', send501)
   
 }
 
