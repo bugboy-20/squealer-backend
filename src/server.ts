@@ -30,6 +30,8 @@ import {verifyToken} from './utils/authorisation';
 import schedules from './schedules/schedules';
 import { credentials } from './middleware/credentials';
 import { corsOptions } from './utils/corsOptions';
+import {auth} from './middleware/auth';
+import {parseJWT} from './middleware/verifyJWT';
 
 const app = polka({
                  onNoMatch: send404,
@@ -46,6 +48,7 @@ app
   .use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
+  .use(parseJWT)
 
 routes(app)
 db_open()
@@ -53,7 +56,7 @@ schedules()
 
 app
   .get('/api/help', (_, res) => res.end('Hello World!'))
-  .get('/tokentest', verifyToken, (req,res) => { res.end('Benvenuto nel mio onlyfans')} )
+
 
   .get('/api/auth/token', (_) => send501)
 

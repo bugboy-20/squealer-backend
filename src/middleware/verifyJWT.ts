@@ -14,7 +14,14 @@ export const parseJWT: Middleware = (req, res, next) => {
   } else {
     const token = authHeader.split(' ')[1];
     verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
-      if (err || !payloadCheck(decoded, false)) return send403(req, res); //invalid token
+      if (err || !payloadCheck(decoded, false)) {
+        req.params = {
+          ...req.params,
+          isAuth: 'false',
+        };
+        next();
+        return
+      }
 
       req.params = {
         ...req.params,

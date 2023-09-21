@@ -73,7 +73,7 @@ const getToken: RequestHandler = catchServerError(async (req, res) => {
   res.end(accessToken);
 });
 
-const getRefreshToken: RequestHandler = async (req, res) => {
+const getRefreshToken: RequestHandler = catchServerError( async (req, res) => {
   const cookies = cookie.parse(req.headers.cookie ?? '');
   if (!cookies?.jwt) return send401(req, res);
   const refreshToken: string = cookies.jwt;
@@ -148,7 +148,7 @@ const getRefreshToken: RequestHandler = async (req, res) => {
       res.end(accessToken);
     }
   );
-};
+});
 
 const deleteToken: RequestHandler = catchServerError(async (req, res) => {
   const cookies = cookie.parse(req.headers.cookie ?? '');
