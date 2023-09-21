@@ -1,5 +1,6 @@
 import polka from "polka"
 import {listAllUsers, addUser, deleteUser, findUser, getQuote} from "../controllers/userController";
+import {send501} from "../utils/statusSenders";
 
 const userRoutes : (app : polka.Polka) => void = app => {
     app
@@ -8,6 +9,7 @@ const userRoutes : (app : polka.Polka) => void = app => {
       .get('/api/users/:username/quota', getQuote)
       .delete('/api/users/:username', deleteUser)
       .put('/api/users/:username', addUser)
+      .get('/api/users/:username/following', send501)
 }
 
 export default userRoutes;

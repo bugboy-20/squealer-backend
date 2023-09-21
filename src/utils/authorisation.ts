@@ -1,6 +1,6 @@
 import {compare} from "bcrypt"
 import {IncomingMessage, ServerResponse} from "http"
-import { verify } from "jsonwebtoken"
+import { verify, JwtPayload } from "jsonwebtoken"
 import polka, {Next} from "polka"
 import { expressjwt, ExpressJwtRequest } from "express-jwt";
 import {User, UserModel} from "../models/userModel"
@@ -25,6 +25,11 @@ function verifyToken(req : Request, res : ServerResponse, next : Next) {
     next()
   })
 }*/
+
+const payloadCheck = (payload: any, refresh: boolean): payload is JwtPayload => {
+  return payload?.username && typeof payload.username === 'string'
+  && refresh || payload?.type && typeof payload.type === 'string';
+};
 
 const verifyToken =  expressjwt({
     secret: process.env.ACCESS_TOKEN_SECRET as string,
@@ -62,4 +67,4 @@ async function userLogin(username : string, password : string) : Promise<boolean
 
 async function revoceToken() {} //TODO
 
-export { verifyToken, userLogin}
+export { verifyToken, userLogin, payloadCheck}

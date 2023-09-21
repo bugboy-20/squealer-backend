@@ -16,6 +16,8 @@ interface User extends Document {
     week: number;
     month: number;
   }
+  subscribed: [];
+  refreshToken: string[];
 }
 
 const userSchema: Schema<User> = new Schema<User>({
@@ -78,8 +80,15 @@ const userSchema: Schema<User> = new Schema<User>({
     month: {
       type: Number
     }
+  },
+  refreshToken: {
+    type: [String],
+    default: []
+  },
+  subscribed: {
+    type: [String],
+    default: []
   }
-
 });
 
 const UserModel = mongoose.model<User>('User', userSchema);

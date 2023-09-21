@@ -28,6 +28,11 @@ import cors from "cors"
 import {send404, send501} from "./utils/statusSenders";
 import {verifyToken} from './utils/authorisation';
 import schedules from './schedules/schedules';
+import { credentials } from './middleware/credentials';
+import { corsOptions } from './utils/corsOptions';
+import {auth} from './middleware/auth';
+import {parseJWT} from './middleware/verifyJWT';
+import {addJsonFn} from './middleware/resMiddleware';
 
 const app = polka({
                  onNoMatch: send404,
@@ -37,12 +42,15 @@ const app = polka({
 console.log(process.env)
 console.log(new Date(Date.now()))
 app
-  .use(cors())
+  .use(addJsonFn)
+  .use(credentials) // BEFORE CORS
+  .use(cors(corsOptions))
   //.use(verifyToken)
   .use(serve_app)
   .use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
+  .use(parseJWT)
 
 routes(app)
 db_open()
@@ -50,10 +58,13 @@ schedules()
 
 app
   .get('/api/help', (_, res) => res.end('Hello World!'))
-  .get('/tokentest', verifyToken, (req,res) => { res.end('Benvenuto nel mio onlyfans')} )
+
 
   .get('/api/auth/token', (_) => send501)
 
+  .get('/api/jsonTest', (_,res) => { //TODO eseguire codesta
+    res.json({ status: "success!"})
+  })
   .listen(8000, (err : Error) => {
     if (err) throw err
     console.log(`> Running on localhost:8000`)
