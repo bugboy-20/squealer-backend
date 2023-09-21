@@ -1,42 +1,50 @@
 import { RequestHandler } from 'express';
 import mongoose from 'mongoose';
-import { MediaModel } from '../models/mediaModel';
 import { catchServerError } from '../utils/controllersUtils';
 import { bucket } from '../db_utils';
 
-const uploadMedia: RequestHandler = catchServerError(
-  async (req, res) => {
-    const file = req.file;
-    if (!file) {
-      res.writeHead(400, {
-        'Content-Type': 'application/json'
-      })
-      return res.end(JSON.stringify({ message: 'No media file uploaded' }));
-    }
-
-    const uploadStream = bucket.openUploadStream(file.originalname);
-    const id = uploadStream.id;
-    uploadStream.end(file.buffer);
-
-    // Save metadata to Media collection
-    const mediaMetadata = new MediaModel({
-      filename: file.originalname,
-      contentType: file.mimetype,
-      fileId: id,
+const uploadMedia: RequestHandler = catchServerError(async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    res.writeHead(400, {
+      'Content-Type': 'application/json',
+      Accept: 'image/*, video/*',
     });
-    mediaMetadata.save();
+    return res.end(JSON.stringify({ message: 'No media file uploaded' }));
+  }
 
-    
-    const mediaUrl = `https://${process.env.VIRTUAL_HOST}/api/media/${id}`;
+  const uploadStream = bucket.openUploadStream(file.originalname, {
+    contentType: file.mimetype,
+  });
+
+  uploadStream.on('error', () => {
+    res.writeHead(500, {
+      'Content-Type': 'application/json',
+      Accept: 'image/*, video/*',
+    });
+    return res.end(
+      JSON.stringify({ message: 'Error uploading file to database' })
+    );
+  });
+
+  uploadStream.on('finish', () => {
+    console.log('File uploaded successfully.');
+    const mediaUrl = `${req.headers['x-forwarded-proto'] ?? 'http'}://${
+      req.headers.host
+    }${req.url}${uploadStream.id}`;
+
+    // const mediaUrl = `http://localhost:8000/api/media/${id}`;
+    console.log(`Current URL: ${mediaUrl}`);
 
     res.writeHead(200, {
-      'Content-Type': 'text/plain'
-    })
+      'Content-Type': 'text/plain',
+      Accept: 'image/*, video/*',
+    });
     res.end(mediaUrl);
-  },
-  500,
-  'Error occurred while uploading media:'
-  ,()=>{});
+  });
+
+  uploadStream.end(file.buffer);
+});
 
 const getMedia: RequestHandler = catchServerError((req, res) => {
   let fileId;
@@ -44,8 +52,8 @@ const getMedia: RequestHandler = catchServerError((req, res) => {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
   } catch (err) {
     res.writeHead(400, {
-      'Content-Type': 'application/json'
-    })
+      'Content-Type': 'application/json',
+    });
     return res.end(
       JSON.stringify({ message: 'Invalid media ID in URL parameter' })
     );
@@ -54,10 +62,12 @@ const getMedia: RequestHandler = catchServerError((req, res) => {
   const downloadStream = bucket.openDownloadStream(fileId);
   downloadStream.pipe(res);
 
-  downloadStream.on('error', () => {
+  downloadStream.on('error', (err) => {
+    console.error(err);
+
     res.writeHead(400, {
-      'Content-Type': 'application/json'
-    })
+      'Content-Type': 'application/json',
+    });
     return res.end(JSON.stringify({ message: 'Error while fetching file' }));
   });
 });
