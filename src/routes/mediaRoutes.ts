@@ -1,6 +1,10 @@
 import polka from 'polka';
 import multer from 'multer';
-import { uploadMedia, getMedia } from '../controllers/mediaController';
+import {
+  uploadMedia,
+  getMedia,
+  compressMedia,
+} from '../controllers/mediaController';
 import { catchServerError } from '../utils/controllersUtils';
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -24,6 +28,7 @@ const mediaRoutes: (app: polka.Polka) => void = (app) => {
     .post(
       '/api/media/',
       catchServerError(upload.single('media'), 406),
+      compressMedia,
       uploadMedia
     )
     .get('/api/media/:id', getMedia);
