@@ -14,18 +14,45 @@ export const compressMedia: RequestHandler = catchServerError(
       });
       return res.end(JSON.stringify({ message: 'No media file uploaded' }));
     }
-    if (file.mimetype.startsWith('video/')) return next();
 
-    const metadata = await sharp(file.buffer).metadata();
-    if (!metadata.format) {
-      return next();
+    console.log(
+      `Before compressing ${Math.floor(
+        Buffer.byteLength(file.buffer) / 1024
+      )} KB`
+    );
+    let compressedBuffer: Buffer | undefined = undefined;
+
+    try {
+      if (file.mimetype.startsWith('image/')) {
+        // the file is an image
+        const metadata = await sharp(file.buffer).metadata();
+        if (!metadata.format) {
+          return next();
+        }
+
+        compressedBuffer = await sharp(file.buffer)
+          .toFormat(metadata.format, { quality: 70, mozjpeg: true }) // Use the input format for output
+          .toBuffer();
+      }
+    } catch (error) {
+      // if something goes wrong, just continue with the original file
+      console.error(error);
+      console.log('Error compressing media file');
+      next();
     }
 
-    file.buffer = await sharp(file.buffer)
-      .toFormat(metadata.format, { quality: 70, mozjpeg: true }) // Use the input format for output
-      .toBuffer();
-
+    if (compressedBuffer) file.buffer = compressedBuffer;
+    console.log(
+      `After compressing ${Math.floor(
+        Buffer.byteLength(file.buffer) / 1024
+      )} KB`
+    );
     next();
+  },
+  500,
+  'Error compressing media file',
+  () => {
+    return 'Error compressing media file';
   }
 );
 
