@@ -20,6 +20,7 @@ const upload = multer({
   },
   limits: {
     files: 1, // For multipart forms, the max number of file fields
+    fileSize: 1024 * 1024 * 50, // 50 MB
   },
 });
 

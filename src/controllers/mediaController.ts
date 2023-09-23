@@ -3,10 +3,6 @@ import mongoose from 'mongoose';
 import { catchServerError } from '../utils/controllersUtils';
 import { bucket } from '../db_utils';
 import sharp from 'sharp';
-import ffmpeg from 'fluent-ffmpeg';
-import stream from 'stream';
-import tmp from 'tmp-promise';
-import fs from 'fs';
 
 export const compressMedia: RequestHandler = catchServerError(
   async (req, res, next) => {
@@ -19,12 +15,11 @@ export const compressMedia: RequestHandler = catchServerError(
       return res.end(JSON.stringify({ message: 'No media file uploaded' }));
     }
 
-    console.log(
-      `Before compressing ${Math.floor(
-        Buffer.byteLength(file.buffer) / 1024
-      )} KB`
-    );
-    let compressedBuffer: Buffer | undefined = undefined;
+    // console.log(
+    //   `Before compressing ${Math.floor(
+    //     Buffer.byteLength(file.buffer) / 1024
+    //   )} KB`
+    // );
 
     try {
       if (file.mimetype.startsWith('image/')) {
@@ -34,50 +29,15 @@ export const compressMedia: RequestHandler = catchServerError(
           return next();
         }
 
-        compressedBuffer = await sharp(file.buffer)
+        file.buffer = await sharp(file.buffer)
           .toFormat(metadata.format, { quality: 70, mozjpeg: true }) // Use the input format for output
           .toBuffer();
 
-        if (compressedBuffer) file.buffer = compressedBuffer;
-        console.log(
-          `After compressing ${Math.floor(
-            Buffer.byteLength(file.buffer) / 1024
-          )} KB`
-        );
-        next();
-      } else {
-        const { path, cleanup } = await tmp.dir({
-          unsafeCleanup: true,
-        });
-        const inputFilePath = `${path}/${file.originalname}`;
-        fs.writeFileSync(inputFilePath, file.buffer);
-
-        const outputfilePath = `${path}/tmp_${file.originalname}`;
-
-        // Create a FFmpeg command to optimize the video
-        ffmpeg(inputFilePath)
-          .output(outputfilePath)
-          .videoCodec('libx264') // Set video codec for compression
-          .audioCodec('aac') // Set audio codec
-          .on('start', (commandLine) => {
-            console.log('FFmpeg command:', commandLine);
-          })
-          .on('end', () => {
-            file.buffer = fs.readFileSync(outputfilePath);
-            cleanup();
-            console.log(
-              `After compressing ${Math.floor(
-                Buffer.byteLength(file.buffer) / 1024
-              )} KB`
-            );
-            next();
-          })
-          .on('error', (err) => {
-            console.error('Error optimizing mammt ', err);
-            cleanup();
-            next();
-          })
-          .run();
+        // console.log(
+        //   `After compressing ${Math.floor(
+        //     Buffer.byteLength(file.buffer) / 1024
+        //   )} KB`
+        // );
       }
     } catch (error) {
       // if something goes wrong, just continue with the original file
@@ -85,6 +45,7 @@ export const compressMedia: RequestHandler = catchServerError(
       console.log('Error compressing media file');
       next();
     }
+    next();
   },
   500,
   'Error compressing media file',
