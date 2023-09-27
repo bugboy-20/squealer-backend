@@ -36,7 +36,7 @@ import {addJsonFn} from './middleware/resMiddleware';
 
 const app = polka({
                  onNoMatch: send404,
-                 onError : (err, req, res, next) => { res.end(err.message) }
+                 onError : (err, req, res, next) => { res.statusCode= 500; res.end(err.message) }
 })
 
 console.log(process.env)
