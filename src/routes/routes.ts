@@ -7,7 +7,7 @@ import tokenRoutes from "./tokenRoutes";
 import userRoutes from "./userRoutes";
 import mediaRoutes from "./mediaRoutes";
 
-let routelist : Array<(a : polka.Polka) => void> = [
+let routelist : Array<(a : polka.Polka) => polka.Polka> = [
     userRoutes,
     logRoutes,
     tokenRoutes,

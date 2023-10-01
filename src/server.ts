@@ -50,7 +50,6 @@ app
   .use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
-  .use(parseJWT)
 
 routes(app)
 db_open()

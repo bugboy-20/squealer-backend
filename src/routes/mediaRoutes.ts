@@ -6,6 +6,7 @@ import {
   compressMedia,
 } from '../controllers/mediaController';
 import { catchServerError } from '../utils/controllersUtils';
+import {parseJWT} from '../middleware/verifyJWT';
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter(req, file, callback) {
@@ -24,8 +25,9 @@ const upload = multer({
   },
 });
 
-const mediaRoutes: (app: polka.Polka) => void = (app) => {
+const mediaRoutes: (app: polka.Polka) => polka.Polka = (app) => 
   app
+    .use('/api/media/*',parseJWT)
     .post(
       '/api/media/',
       catchServerError(upload.single('media'), 406),
@@ -33,6 +35,5 @@ const mediaRoutes: (app: polka.Polka) => void = (app) => {
       uploadMedia
     )
     .get('/api/media/:id', getMedia);
-};
 
 export default mediaRoutes;

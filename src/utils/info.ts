@@ -1,7 +1,7 @@
 
 import polka from "polka"
 
-const serverInfo : (app : polka.Polka) => void = app => {
+const serverInfo : (app : polka.Polka) => polka.Polka = app =>
     app
       .get('/api/info', (req,res) =>{
         let infos = {
@@ -15,6 +15,5 @@ const serverInfo : (app : polka.Polka) => void = app => {
           .writeHead(200, {'Content-Type': 'application/json'})
           .end(JSON.stringify(infos))
       })
-}
 
 export default serverInfo;

@@ -1,15 +1,17 @@
 import polka from "polka"
 import {listAllUsers, addUser, deleteUser, findUser, getQuote} from "../controllers/userController";
-import {send501} from "../utils/statusSenders";
+import {and, not, auth, isModerator, noAuth, sameUsername} from "../middleware/auth";
+import {parseJWT} from "../middleware/verifyJWT";
+import {send401, send501} from "../utils/statusSenders";
 
-const userRoutes : (app : polka.Polka) => void = app => {
+const userRoutes : (app : polka.Polka) => polka.Polka = app => 
     app
-      .get('/api/users/', listAllUsers)
-      .get('/api/users/:username', findUser)
-      .get('/api/users/:username/quota', getQuote)
-      .delete('/api/users/:username', deleteUser)
-      .put('/api/users/:username', addUser)
-      .get('/api/users/:username/following', send501)
-}
+      .use('/api/users/*',parseJWT)
+      .get('/api/users/', auth(not(noAuth), listAllUsers), send401)
+      .get('/api/users/:username', auth(not(noAuth), findUser))
+      .get('/api/users/:username/quota', auth(and(isModerator,sameUsername), getQuote))
+      .delete('/api/users/:username', auth(and(isModerator, sameUsername), deleteUser), send401)
+      .put('/api/users/:username',  addUser)
+      .get('/api/users/:username/following', send501) //TODO
 
 export default userRoutes;

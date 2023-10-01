@@ -15,11 +15,8 @@ export const parseJWT: Middleware = (req, res, next) => {
     const token = authHeader.split(' ')[1];
     verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
       if (err || !payloadCheck(decoded, false)) {
-        req.params = {
-          ...req.params,
-          isAuth: 'false',
-        };
-        next();
+        res.statusCode = 442
+        res.json({error: "token expired"})
         return
       }
 

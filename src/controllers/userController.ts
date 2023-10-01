@@ -7,13 +7,7 @@ import { catchServerError } from '../utils/controllersUtils';
 
 const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
     const users: User[] = await UserModel.find().exec();
-     res.writeHead(200, {
-      'Content-Type': 'application/json',
-    });
-    let json = JSON.stringify(users.map(u => userBackToFront(u)));
-    res.end(json);
-    //res.status(200).json(logs);
-    //res.json(logs);
+    res.json(users.map(u => userBackToFront(u)));
   },500,'listAllUsers error: ')
 
 const findUser : RequestHandler = catchServerError( async (req, res) => {

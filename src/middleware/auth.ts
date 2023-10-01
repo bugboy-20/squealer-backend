@@ -1,3 +1,4 @@
+import exp from 'constants';
 import { Middleware } from 'polka';
 
 // estensione del tipo Middleware che restituisce un booleano, serve solo per tipare req
@@ -18,20 +19,25 @@ export const auth = (
   };
 };
 
-// example conditions
-export const isModerator: BooleanMiddleware = (req) => {
-  return (
-    req.params.isAuth === 'true' && req.params.authUsertype === 'moderator'
-  );
-};
+export const and = (a : BooleanMiddleware, b : BooleanMiddleware) : BooleanMiddleware =>
+  (req,res,next) => a(req,res,next) && b(req,res,next)
 
-export const sameUsername: BooleanMiddleware = (req) => {
-  return (
+export const or = (a : BooleanMiddleware, b : BooleanMiddleware) : BooleanMiddleware =>
+  (req,res,next) => a(req,res,next) || b(req,res,next)
+
+export const not = (a : BooleanMiddleware) : BooleanMiddleware =>
+  (req,res,next) => !a(req,res,next)
+
+// example conditions
+export const isModerator: BooleanMiddleware = (req) =>
+    req.params.isAuth === 'true' && req.params.authUsertype === 'moderator'
+
+export const sameUsername: BooleanMiddleware = (req) =>
     req.params.isAuth === 'true' &&
     req.params.authUsername === req.params.username
-  );
-};
 
-export const noAuth: BooleanMiddleware = (req) => {
-  return req.params.isAuth === 'false';
-};
+export const noAuth: BooleanMiddleware = (req) =>
+  req.params.isAuth === 'false';
+
+export const isAuth: BooleanMiddleware = (req) =>
+  req.params.isAuth === 'true';
