@@ -8,7 +8,7 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
     let squeals = SquealModel.find()
 
     if ( req.params.id )
-      squeals.find({_id: req.params.id})
+      squeals.findOne({_id: req.params.id})
     if ( req.params.channelName)
       squeals.find({ receivers: req.params.channelName});
     if ( req.query.author)
@@ -52,7 +52,7 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
     }
 
     dbRes = SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true});
-    res.end(JSON.stringify(await dbRes?.exec()))
+    res.json(await dbRes.exec())
 
 })
 
