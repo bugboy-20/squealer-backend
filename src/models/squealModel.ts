@@ -93,6 +93,19 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   }],
 });
 
+squealSchema.pre('save', function (next) {
+  const uniqueElements = [...new Set(this.positive_reaction)];
+  this.positive_reaction = uniqueElements;
+
+  // Check for duplicates in the second array
+  for (const element of this.negative_reaction) {
+    if (uniqueElements.includes(element)) {
+      return next(new Error('Duplicate elements found in the secondArray.'));
+    }
+  }
+
+  next();
+});
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
 export {Squeal, SquealSMM,SquealModel, squealSchema}

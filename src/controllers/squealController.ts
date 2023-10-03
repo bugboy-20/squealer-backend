@@ -1,9 +1,9 @@
-import {RequestHandler} from "express";
+import { Middleware } from "polka";
 import {Squeal, SquealModel} from "../models/squealModel";
 import {catchServerError} from "../utils/controllersUtils";
 import {squeal4NormalUser} from "../utils/SquealUtils";
 
-const getSqueals : RequestHandler = catchServerError( async (req, res) => {
+const getSqueals : Middleware = catchServerError( async (req, res) => {
 
     let squeals = SquealModel.find()
 
@@ -34,7 +34,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
   })
 
-const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO gestire con autenticazione
+const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO gestire con autenticazione
 
 
   let squealID = req.params.id;
@@ -43,11 +43,11 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
   
     switch (req.body.op) {
       case "viewed":
-        opType = { $push: {"impressions":"@unkonwn"}}; break
+        opType = { $push: {"impressions":req.params.authUsername}}; break
       case "upvote":
-        opType = { $push: {"positive_reaction":"@unkonwn"}}; break
+        opType = { $push: {"positive_reaction":req.params.authUsername}}; break
       case "downvote":
-        opType = { $push: {"negative_reaction":"@unkonwn"}}; break
+        opType = { $push: {"negative_reaction":req.params.authUsername}}; break
       default: res.statusCode = 400; opType = {}; break
     }
 
@@ -56,7 +56,7 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
 
 })
 
-const postSqueal : RequestHandler = catchServerError( async (req, res) => {
+const postSqueal : Middleware = catchServerError( async (req, res) => {
 
     let inSqueal : Squeal = req.body
     
@@ -82,7 +82,7 @@ const postSqueal : RequestHandler = catchServerError( async (req, res) => {
       .end(JSON.stringify(savedSqueal));
   },400,'postSqueal error: ')
 
-const deleteSqueal : RequestHandler = catchServerError( async (req, res) => {
+const deleteSqueal : Middleware = catchServerError( async (req, res) => {
 
     const id  = req.params.id
 
