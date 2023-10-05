@@ -7,8 +7,12 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
 
     let squeals = SquealModel.find()
 
-    if ( req.params.id )
-      squeals.findOne({_id: req.params.id})
+    if ( req.params.id ) { //TODO valutare di sportre
+      let json = await squeals.findOne({_id: req.params.id}).exec()
+      if(json)
+        res.json(squeal4NormalUser(json))
+      return
+    }
     if ( req.params.channelName)
       squeals.find({ receivers: req.params.channelName});
     if ( req.query.author)
@@ -25,13 +29,7 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
     }
 
 
-    res.writeHead(200, {
-      'Content-Type': 'application/json',
-    });
-    let json = JSON.stringify((await squeals.exec()).map(s => squeal4NormalUser(s)));
-    //let json = JSON.stringify((await squeals.exec()).map(s => squeal4NormalUser(s)));
-    res.end(json);
-
+    res.json((await squeals.exec()).map(s => squeal4NormalUser(s)));
   })
 
 const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO gestire con autenticazione
@@ -51,8 +49,13 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
       default: res.statusCode = 400; opType = {}; break
     }
 
-    dbRes = SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true});
-    res.json(await dbRes.exec())
+    dbRes = await SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec()
+    if (dbRes)
+      res.json(dbRes)
+    else {
+      res.statusCode = 404
+      res.end()
+    }
 
 })
 
