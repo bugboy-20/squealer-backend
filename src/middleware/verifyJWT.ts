@@ -1,33 +1,43 @@
-import { verify } from 'jsonwebtoken';
+import cookie from 'cookie';
 import { Middleware } from 'polka';
-import { payloadCheck } from '../utils/authorisation';
-import { send403 } from '../utils/statusSenders';
+import { verifyJwt } from '../utils/authorisation';
 
 export const parseJWT: Middleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  const cookies = cookie.parse(req.headers.cookie ?? '');
+  const message = 'Invalid token';
+  // Get the token
+  let access_token;
+  if (authHeader?.startsWith('Bearer ')) {
+    access_token = authHeader.split(' ')[1];
+  } else if (cookies?.access_token) {
+    access_token = cookies.access_token;
+  } else if (cookies?.refresh_token) {
+    // if there is no access token but there is a refresh token,
+    // we need to refresh the access token
+    res.statusCode = 401;
+    return res.json({ message });
+  }
+
+  if (!access_token) {
     req.params = {
       ...req.params,
       isAuth: 'false',
     };
     next();
   } else {
-    const token = authHeader.split(' ')[1];
-    verify(token, process.env.ACCESS_TOKEN_SECRET as string, (err, decoded) => {
-      if (err || !payloadCheck(decoded, false)) {
-        res.statusCode = 442
-        res.json({error: "token expired"})
-        return
-      }
+    const decoded = verifyJwt(access_token, 'ACCESS');
+    if (!decoded) {
+      res.statusCode = 401;
+      return res.json({ message });
+    }
 
-      req.params = {
-        ...req.params,
-        isAuth: 'true',
-        authUsername: decoded.username,
-        authUsertype: decoded.type,
-      };
-      next();
-    });
+    req.params = {
+      ...req.params,
+      isAuth: 'true',
+      authUsername: decoded.username,
+      authUsertype: decoded.type,
+    };
+    next();
   }
 };
-
