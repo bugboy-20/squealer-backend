@@ -1,70 +1,29 @@
-import {compare} from "bcrypt"
-import {IncomingMessage, ServerResponse} from "http"
-import { verify, JwtPayload } from "jsonwebtoken"
-import polka, {Next} from "polka"
-import { expressjwt, ExpressJwtRequest } from "express-jwt";
-import {User, UserModel} from "../models/userModel"
-import {RequestHandler} from "sirv";
-/*
-function verifyToken(req : Request, res : ServerResponse, next : Next) {
-  const authHeader = req.headers['authorization']
-  const token = authHeader && authHeader.split(' ')[1]
-  if (token == null) {
-    res.statusCode = 401
-    res.end()
-  }
+import jwt from 'jsonwebtoken';
 
-  verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    console.log(err)
-    if (err) {
-        res.statusCode = 403
-        res.end(err.message)
-    }
-    req.user = user;
-
-    next()
-  })
-}*/
-
-const payloadCheck = (payload: any, refresh: boolean): payload is JwtPayload => {
-  return payload?.username && typeof payload.username === 'string'
-  && refresh || payload?.type && typeof payload.type === 'string';
+type token_payload = {
+  username: string;
+  type: string;
 };
 
-const verifyToken =  expressjwt({
-    secret: process.env.ACCESS_TOKEN_SECRET as string,
-    algorithms: ["HS256"],
-  }) //.unless({ path: ["/","/api/token","/api/users"] }) //TODO ???
+const payloadCheck = (payload: any): payload is token_payload => {
+  return (
+    ('username' in payload && typeof payload.username === 'string') ||
+    ('type' in payload && typeof payload.type === 'string')
+  );
+};
 
-
-const unauthorizatedUserHandler  = (err : any, req : Request, res : ServerResponse, next : Next) => {
-  if (err.name === "UnauthorizedError") {
-    let url = '/login';
-    let str = `Redirecting to ${url}`;
-
-    res.writeHead(302, {
-        Location: url,
-        'Content-Type': 'text/plain',
-        'Content-Length': str.length
-    });
-
-    res.end(str);
-  } else {
-    next(err);
+export const verifyJwt = (
+  token: string,
+  key: 'ACCESS' | 'REFRESH'
+): token_payload | null => {
+  try {
+    const decoded = jwt.verify(
+      token,
+      process.env[`${key}_TOKEN_SECRET`] as string
+    );
+    if (payloadCheck(decoded)) return decoded;
+    else return null;
+  } catch (error) {
+    return null;
   }
-}
-
-async function userLogin(username : string, password : string) : Promise<boolean> {
-
-  // con try catch non conpilava
-  const user : User | null = await UserModel.findOne({username}).exec();
-  if (user)
-    return await compare(password, user.password)
-  else
-    return false;
-
-}
-
-async function revoceToken() {} //TODO
-
-export { verifyToken, userLogin, payloadCheck}
+};
