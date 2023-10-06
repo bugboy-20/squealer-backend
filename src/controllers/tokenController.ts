@@ -1,8 +1,7 @@
 import { compare } from 'bcrypt';
 import cookie from 'cookie';
-import { Response } from 'express';
+import { Response, RequestHandler } from 'express';
 import { sign } from 'jsonwebtoken';
-import { Middleware } from 'polka';
 import { UserModel } from '../models/userModel';
 import { verifyJwt } from '../utils/authorisation';
 import { catchServerError } from '../utils/controllersUtils';
@@ -25,7 +24,7 @@ const refreshTokenMaxAge = 60 * 1000; //24 * 60 * 60 * 1000; // 1 day
 const accessTokenExpiresIn = '30s';
 const refreshTokenExpiresIn = '1m';
 
-const getToken: Middleware = catchServerError(async (req, res) => {
+const getToken: RequestHandler = catchServerError(async (req, res, next) => {
   const { username, password } = req.body;
   if (!username || !password) {
     res.statusCode = 400;
@@ -37,7 +36,7 @@ const getToken: Middleware = catchServerError(async (req, res) => {
   const user = await UserModel.findOne({ username }).exec();
 
   if (!user || !(await compare(password, user.password)))
-    return send401(req, res);
+    return send401(req, res, next);
 
   // create access token and refresh token
   const accessToken = sign(
@@ -98,9 +97,9 @@ const getToken: Middleware = catchServerError(async (req, res) => {
   res.end(accessToken);
 });
 
-const getRefreshToken: Middleware = catchServerError(async (req, res) => {
+const getRefreshToken: RequestHandler = catchServerError(async (req, res, next) => {
   const cookies = cookie.parse(req.headers.cookie ?? '');
-  if (!cookies?.refresh_token) return send401(req, res);
+  if (!cookies?.refresh_token) return send401(req, res, next);
   const refreshToken = cookies.refresh_token;
   res.clearCookie('access_token', cookieOptions); // no point in clearing the access token
 
@@ -184,13 +183,13 @@ const getRefreshToken: Middleware = catchServerError(async (req, res) => {
   res.end(accessToken);
 });
 
-const deleteToken: Middleware = catchServerError(async (req, res) => {
+const deleteToken: RequestHandler = catchServerError(async (req, res, next) => {
   const cookies = cookie.parse(req.headers.cookie ?? '');
 
   res.clearCookie('logged_in', cookieOptions);
   res.clearCookie('access_token', cookieOptions);
 
-  if (!cookies?.refresh_token) return send204(req, res); //No content
+  if (!cookies?.refresh_token) return send204(req, res, next); //No content
   const refreshToken = cookies.refresh_token;
 
   // is refreshToken in db?
@@ -219,7 +218,7 @@ const deleteToken: Middleware = catchServerError(async (req, res) => {
 
   res.clearCookie('refresh_token', cookieOptions);
 
-  send204(req, res);
+  send204(req, res, next);
 });
 
 export { deleteToken, getRefreshToken, getToken };

@@ -1,9 +1,7 @@
-
-import polka from "polka"
+import { Express } from "express"
 import {addLog, listAllLogs} from "../controllers/logController";
-import {parseJWT} from "../middleware/verifyJWT";
 
-const logRoutes : (app : polka.Polka) => polka.Polka = app =>
+const logRoutes : (app : Express) => Express = app =>
     app
       .put('/api/logs/', addLog)
       .get('/api/logs/', listAllLogs)

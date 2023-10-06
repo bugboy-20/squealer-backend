@@ -1,11 +1,11 @@
-import polka from "polka";
+import { Express } from "express"
 import {getComments} from "../controllers/commentController";
 
 import {deleteSqueal, getSqueals, postSqueal, updateSqueal} from '../controllers/squealController';
 import {escapeQuery} from "../middleware/esapeChars";
 import {parseJWT} from "../middleware/verifyJWT";
 
-const squealRoutes : (app : polka.Polka) => polka.Polka = app =>
+const squealRoutes : (app : Express) => Express = app =>
   app
     .use('/api/squeals/*',parseJWT)
     .get('/api/squeals/:id?', escapeQuery('channelName'), getSqueals)

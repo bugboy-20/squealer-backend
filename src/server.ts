@@ -19,6 +19,7 @@ const serve_smm = require('sirv')(__dirname + '/../smm');
 import dotenv from 'dotenv'
 dotenv.config({ path: `${__dirname}/.env`})
 
+import express from 'express'
 import bodyParser from "body-parser";
 import polka from "polka";
 import {db_open} from "./db_utils";
@@ -32,39 +33,37 @@ import { corsOptions } from './utils/corsOptions';
 import {parseJWT} from './middleware/verifyJWT';
 import {addClearCookieFn, addCookieFn, addJsonFn} from './middleware/resMiddleware';
 
+/*
 const app = polka({
                  onNoMatch: send404,
                  onError : (err, req, res, next) => { res.statusCode= 500; res.end(err.message) }
-})
+})*/
+
+const app = express()
 
 console.log(process.env)
 console.log(new Date(Date.now()))
 app
-  .use(addJsonFn)
-  .use(addCookieFn)
-  .use(addClearCookieFn)
+  //.use(addJsonFn)
+  //.use(addCookieFn)
+  //.use(addClearCookieFn)
   .use(credentials) // BEFORE CORS
   .use(cors(corsOptions))
   //.use(parseJWT)
   .use(serve_app)
-  .use('/smm',serve_smm, {index: ['index.html']})
+  //.use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
 
-routes(app)
 db_open()
 schedules()
 
 app
-  .get('/api/help', (_, res) => res.end('Hello World!'))
-
-
-  .get('/api/auth/token', (_) => send501)
-
-  .get('/api/jsonTest', (_,res) => { //TODO eseguire codesta
-    res.json({ status: "success!"})
+  .get('/api/redirect', (_,res) => {
+    res.redirect('users')
   })
-  .listen(8000, (err : Error) => {
-    if (err) throw err
-    console.log(`> Running on localhost:8000`)
-  })
+
+routes(app)
+
+app
+  .listen(8000)

@@ -1,10 +1,10 @@
-import polka from "polka"
-import {listAllUsers, addUser, deleteUser, findUser, getQuote} from "../controllers/userController";
+import { Express } from "express"
+import {listAllUsers, addUser, deleteUser, findUser, getQuote, whoiam} from "../controllers/userController";
 import {and, not, auth, isModerator, noAuth, sameUsername} from "../middleware/auth";
 import {parseJWT} from "../middleware/verifyJWT";
 import {send401, send501} from "../utils/statusSenders";
 
-const userRoutes : (app : polka.Polka) => polka.Polka = app => 
+const userRoutes : (app : Express) => Express = app => 
     app
       .use('/api/users/*',parseJWT)
       .get('/api/users/', auth(not(noAuth), listAllUsers), send401)
@@ -13,5 +13,6 @@ const userRoutes : (app : polka.Polka) => polka.Polka = app =>
       .delete('/api/users/:username', auth(and(isModerator, sameUsername), deleteUser), send401)
       .put('/api/users/:username',  addUser)
       .get('/api/users/:username/following', send501) //TODO
+      .get('/api/users/me', whoiam)
 
 export default userRoutes;

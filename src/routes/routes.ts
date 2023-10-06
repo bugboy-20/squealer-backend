@@ -1,4 +1,4 @@
-import polka from "polka";
+import { Express } from "express"
 import serverInfo from "../utils/info";
 import channelRoutes from "./channelRouter";
 import logRoutes from "./logRoutes";
@@ -7,7 +7,7 @@ import tokenRoutes from "./tokenRoutes";
 import userRoutes from "./userRoutes";
 import mediaRoutes from "./mediaRoutes";
 
-let routelist : Array<(a : polka.Polka) => polka.Polka> = [
+let routelist : Array<(a : Express) => Express> = [
     userRoutes,
     logRoutes,
     tokenRoutes,
@@ -17,7 +17,7 @@ let routelist : Array<(a : polka.Polka) => polka.Polka> = [
     serverInfo
 ];
 
-const routes : (app : polka.Polka) => polka.Polka = (app) => {
+const routes : (app : Express) => Express = (app) => {
     routelist.forEach(f => f(app))
     app.all('/api/*', (req,res) => {
         res.statusCode = 405

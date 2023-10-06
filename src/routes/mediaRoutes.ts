@@ -1,4 +1,4 @@
-import polka from 'polka';
+import { Express } from "express"
 import multer from 'multer';
 import {
   uploadMedia,
@@ -25,7 +25,7 @@ const upload = multer({
   },
 });
 
-const mediaRoutes: (app: polka.Polka) => polka.Polka = (app) => 
+const mediaRoutes: (app: Express) => Express = (app) => 
   app
     .use('/api/media/*',parseJWT)
     .post(

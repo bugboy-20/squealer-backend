@@ -1,4 +1,4 @@
-import {RequestHandler} from "sirv";
+import {RequestHandler} from "express";
 
 const send404 : RequestHandler = (req, res) => {
   res.statusCode = 404;

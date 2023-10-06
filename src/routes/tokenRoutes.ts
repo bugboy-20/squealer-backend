@@ -1,9 +1,7 @@
-
-
-import polka from "polka"
+import { Express } from "express"
 import {getToken,deleteToken, getRefreshToken} from "../controllers/tokenController";
 
-const tokenRoutes : (app : polka.Polka) => polka.Polka = app =>
+const tokenRoutes : (app : Express) => Express = app =>
     app
       .post('/api/token', getToken) //login
       .delete('/api/token', deleteToken) //logout

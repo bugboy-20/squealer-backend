@@ -1,7 +1,7 @@
 
-import polka from "polka"
+import { Express } from 'express'
 
-const serverInfo : (app : polka.Polka) => polka.Polka = app =>
+const serverInfo : (app : Express) => Express = app =>
     app
       .get('/api/info', (req,res) =>{
         let infos = {
