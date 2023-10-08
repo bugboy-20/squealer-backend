@@ -9,7 +9,7 @@ const userRoutes : (app : Express) => Express = app =>
       .use('/api/users/*',parseJWT)
       .get('/api/users/', auth(not(noAuth), listAllUsers), send401)
       .get('/api/users/:username', auth(not(noAuth), findUser))
-      .get('/api/users/:username/quota', auth(and(isModerator,sameUsername), getQuote))
+      .get('/api/users/:username/quota', auth(and(isModerator,sameUsername), getQuote), send401)
       .delete('/api/users/:username', auth(and(isModerator, sameUsername), deleteUser), send401)
       .put('/api/users/:username',  addUser)
       .get('/api/users/:username/following', send501) //TODO

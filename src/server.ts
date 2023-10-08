@@ -12,26 +12,18 @@
  *
  *  valutare Zod e autogenerazione della API doc
  */
-
-const serve_app = require('sirv')(__dirname + '/../app');
-const serve_smm = require('sirv')(__dirname + '/../smm');
-//const serve_mod = require('sirv')(__dirname + '/../smm');
 import dotenv from 'dotenv'
 dotenv.config({ path: `${__dirname}/.env`})
 
 import express from 'express'
 import bodyParser from "body-parser";
-import polka from "polka";
 import {db_open} from "./db_utils";
 //const polka = require('polka');
 import routes from "./routes/routes";
 import cors from "cors"
-import {send404, send501} from "./utils/statusSenders";
 import schedules from './schedules/schedules';
 import { credentials } from './middleware/credentials';
 import { corsOptions } from './utils/corsOptions';
-import {parseJWT} from './middleware/verifyJWT';
-import {addClearCookieFn, addCookieFn, addJsonFn} from './middleware/resMiddleware';
 
 /*
 const app = polka({
@@ -49,9 +41,9 @@ app
   //.use(addClearCookieFn)
   .use(credentials) // BEFORE CORS
   .use(cors(corsOptions))
+  .use('/',express.static(__dirname + '/../app'))
+  .use('/smm',express.static(__dirname + '/../smm'))
   //.use(parseJWT)
-  .use(serve_app)
-  //.use('/smm',serve_smm, {index: ['index.html']})
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
 

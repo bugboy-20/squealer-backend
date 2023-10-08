@@ -27,6 +27,12 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
         .skip(pNum*10) //TODO generalizzare
         .limit(10)
     }
+    if ( req.query.mention && typeof req.query.mention === "string") {
+      squeals.find({ "body.content": { $regex: new RegExp(req.query.mention), $options: 'i' }})
+    }
+    if ( req.query.query && typeof req.query.query === "string") {
+      squeals.find({ receivers: { $regex: new RegExp(req.query.query), $options: 'i' }})
+    }
 
 
     res.json((await squeals.exec()).map(s => squeal4NormalUser(s)));
