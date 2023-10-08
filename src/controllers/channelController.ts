@@ -55,11 +55,12 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     }
 
 
-    res.writeHead(200, {
-      'Content-Type': 'application/json',
-    });
-    let json = JSON.stringify(await channels.exec());
-    res.end(json);
-},404,'Error in listAllChannels')
+    const chq : Channel | Channel[] | null = await channels.exec()
+    if(!chq)
+      res.statusCode = 404
+
+    res.json(chq)
+
+},500,'Error in listAllChannels')
 
 export {addChannel, getChannels};
