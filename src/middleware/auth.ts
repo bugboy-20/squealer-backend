@@ -1,15 +1,14 @@
-import exp from 'constants';
-import { Middleware } from 'polka';
+import { RequestHandler } from 'express';
 
-// estensione del tipo Middleware che restituisce un booleano, serve solo per tipare req
-type BooleanMiddleware = Middleware extends (...a: infer A) => any
+// estensione del tipo RequestHandler che restituisce un booleano, serve solo per tipare req
+type BooleanRequestHandler = RequestHandler extends (...a: infer A) => any
   ? (...a: A) => boolean
   : never;
 
 export const auth = (
-  condition: BooleanMiddleware,
-  middleware: Middleware
-): Middleware => {
+  condition: BooleanRequestHandler,
+  middleware: RequestHandler
+): RequestHandler => {
   return (req, res, next) => {
     if (condition(req, res, next)) {
       middleware(req, res, next);
@@ -19,25 +18,25 @@ export const auth = (
   };
 };
 
-export const and = (a : BooleanMiddleware, b : BooleanMiddleware) : BooleanMiddleware =>
+export const and = (a : BooleanRequestHandler, b : BooleanRequestHandler) : BooleanRequestHandler =>
   (req,res,next) => a(req,res,next) && b(req,res,next)
 
-export const or = (a : BooleanMiddleware, b : BooleanMiddleware) : BooleanMiddleware =>
+export const or = (a : BooleanRequestHandler, b : BooleanRequestHandler) : BooleanRequestHandler =>
   (req,res,next) => a(req,res,next) || b(req,res,next)
 
-export const not = (a : BooleanMiddleware) : BooleanMiddleware =>
+export const not = (a : BooleanRequestHandler) : BooleanRequestHandler =>
   (req,res,next) => !a(req,res,next)
 
 // example conditions
-export const isModerator: BooleanMiddleware = (req) =>
-    req.params.isAuth === 'true' && req.params.authUsertype === 'moderator'
+export const isModerator: BooleanRequestHandler = (req) =>
+    req.auth.isAuth === true && req.auth.usertype === 'moderator'
 
-export const sameUsername: BooleanMiddleware = (req) =>
-    req.params.isAuth === 'true' &&
-    req.params.authUsername === req.params.username
+export const sameUsername: BooleanRequestHandler = (req) =>
+    req.auth.isAuth === true &&
+    req.auth.username === req.params.username
 
-export const noAuth: BooleanMiddleware = (req) =>
-  req.params.isAuth === 'false';
+export const noAuth: BooleanRequestHandler = (req) =>
+  req.auth.isAuth === false;
 
-export const isAuth: BooleanMiddleware = (req) =>
-  req.params.isAuth === 'true';
+export const isAuth: BooleanRequestHandler = (req) =>
+  req.auth.isAuth === true;

@@ -20,9 +20,10 @@ export const parseJWT: Middleware = (req, res, next) => {
   }
 
   if (!access_token) {
-    req.params = {
-      ...req.params,
-      isAuth: 'false',
+    req.auth = {
+      isAuth: false,
+      username: "",
+      usertype: "",
     };
     next();
   } else {
@@ -32,11 +33,10 @@ export const parseJWT: Middleware = (req, res, next) => {
       return res.json({ message });
     }
 
-    req.params = {
-      ...req.params,
-      isAuth: 'true',
-      authUsername: decoded.username,
-      authUsertype: decoded.type,
+    req.auth = {
+      isAuth: true,
+      username: decoded.username,
+      usertype: decoded.type,
     };
     next();
   }

@@ -83,7 +83,7 @@ const deleteUser : RequestHandler = catchServerError( async (req, res) => {
 
 
 const whoiam : RequestHandler = catchServerError ( async (req,res) => {
-  res.redirect(req.params.authUsername)
+  res.redirect(req.auth.username)
 })
 
 export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam};

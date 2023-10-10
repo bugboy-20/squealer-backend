@@ -8,6 +8,9 @@ import { catchServerError } from '../utils/controllersUtils';
 import { send204, send401 } from '../utils/statusSenders';
 
 const expiredRefreshToken = (res: Response) => {
+  res.clearCookie('logged_in', cookieOptions);
+  res.clearCookie('access_token', cookieOptions);
+  res.clearCookie('refresh_token', cookieOptions);
   res.statusCode = 403;
   res.setHeader('Content-Type', 'text/plain');
   res.json({ message: 'Expired refresh token' });
@@ -209,12 +212,6 @@ const deleteToken: RequestHandler = catchServerError(async (req, res, next) => {
       }
     );
   }
-
-  // res.cookie('access_token', '', { maxAge: 1 });
-  // res.cookie('refresh_token', '', { maxAge: 1 });
-  // res.cookie('logged_in', '', {
-  //   maxAge: 1,
-  // });
 
   res.clearCookie('refresh_token', cookieOptions);
 
