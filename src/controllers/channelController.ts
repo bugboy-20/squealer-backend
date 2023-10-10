@@ -13,9 +13,7 @@ const addChannel : RequestHandler = catchServerError(
 
     const log = new ChannelModel(req.body);
     const savedChannel = await log.save();
-    res
-      .writeHead(200, {'Content-Type': 'application/json'})
-      .end(JSON.stringify(savedChannel))
+    res.json(savedChannel);
   }
   ,500
   ,'Error in addChannel: ')
@@ -36,9 +34,7 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
       try {
         official = JSON.parse( req.query.official as string )
       } catch(_) {
-        res.statusCode = 417
-        res.end(JSON.stringify( { error: `official has to be boolean, found "${req.query.official}"`}))
-        return
+        return res.status(417).json( { error: `official has to be boolean, found "${req.query.official}"`})
       }
       if (official)
         channels.find({

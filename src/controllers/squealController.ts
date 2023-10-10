@@ -59,8 +59,7 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
     if (dbRes)
       res.json(dbRes)
     else {
-      res.statusCode = 404
-      res.end()
+      res.status(404).end();
     }
 
 })
@@ -86,9 +85,7 @@ const postSqueal : Middleware = catchServerError( async (req, res) => {
 
     //res.sendStatus(202)
     const savedSqueal = await squeal.save();
-    res
-      .writeHead(201, {'Content-Type': 'application/json'})
-      .end(JSON.stringify(savedSqueal));
+    res.status(201).json(savedSqueal);
   },400,'postSqueal error: ')
 
 const deleteSqueal : Middleware = catchServerError( async (req, res) => {
@@ -97,8 +94,7 @@ const deleteSqueal : Middleware = catchServerError( async (req, res) => {
 
     await SquealModel.deleteOne({ _id : id})
     
-
-    res.end({ log: `${id} deleted`})
+    res.json({ log: `${id} deleted`})
 })
 
 

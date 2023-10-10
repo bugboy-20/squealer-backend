@@ -8,11 +8,8 @@ export const compressMedia: RequestHandler = catchServerError(
   async (req, res, next) => {
     const file = req.file;
     if (!file) {
-      res.writeHead(400, {
-        'Content-Type': 'application/json',
-        Accept: 'image/*, video/*',
-      });
-      return res.end(JSON.stringify({ message: 'No media file uploaded' }));
+      res.set("Accept", "image/*, video/*")
+      return res.status(400).json({ message: 'No media file uploaded' });
     }
 
     // console.log(
@@ -57,11 +54,8 @@ export const compressMedia: RequestHandler = catchServerError(
 const uploadMedia: RequestHandler = catchServerError(async (req, res) => {
   const file = req.file;
   if (!file) {
-    res.writeHead(400, {
-      'Content-Type': 'application/json',
-      Accept: 'image/*, video/*',
-    });
-    return res.end(JSON.stringify({ message: 'No media file uploaded' }));
+    res.set("Accept", "image/*, video/*")
+    return res.status(400).json({ message: 'No media file uploaded' });
   }
 
   const uploadStream = bucket.openUploadStream(file.originalname, {
@@ -69,13 +63,8 @@ const uploadMedia: RequestHandler = catchServerError(async (req, res) => {
   });
 
   uploadStream.on('error', () => {
-    res.writeHead(500, {
-      'Content-Type': 'application/json',
-      Accept: 'image/*, video/*',
-    });
-    return res.end(
-      JSON.stringify({ message: 'Error uploading file to database' })
-    );
+    res.set("Accept", "image/*, video/*")
+    return res.status(500).json({ message: 'Error uploading file to database' });
   });
 
   uploadStream.on('finish', () => {
@@ -98,12 +87,7 @@ const getMedia: RequestHandler = catchServerError((req, res) => {
   try {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
   } catch (err) {
-    res.writeHead(400, {
-      'Content-Type': 'application/json',
-    });
-    return res.end(
-      JSON.stringify({ message: 'Invalid media ID in URL parameter' })
-    );
+    return res.status(400).json({ message: 'Invalid media ID in URL parameter' });
   }
 
   const downloadStream = bucket.openDownloadStream(fileId);
@@ -111,11 +95,7 @@ const getMedia: RequestHandler = catchServerError((req, res) => {
 
   downloadStream.on('error', (err) => {
     console.error(err);
-
-    res.writeHead(400, {
-      'Content-Type': 'application/json',
-    });
-    return res.end(JSON.stringify({ message: 'Error while fetching file' }));
+    return res.status(400).json({ message: 'Error while fetching file' });
   });
 });
 

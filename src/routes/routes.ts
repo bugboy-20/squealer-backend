@@ -20,8 +20,7 @@ let routelist : Array<(a : Express) => Express> = [
 const routes : (app : Express) => Express = (app) => {
     routelist.forEach(f => f(app))
     app.all('/api/*', (req,res) => {
-        res.statusCode = 405
-        res.end('405 - Method not Allowed')
+        res.status(405).end('405 - Method not Allowed')
     })
     return app;
 }

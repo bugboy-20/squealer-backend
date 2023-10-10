@@ -11,9 +11,7 @@ const serverInfo : (app : Express) => Express = app =>
           defaultCharsPerMonth: +(process.env.CHAR_PER_MONTH as string)
         }
 
-        res
-          .writeHead(200, {'Content-Type': 'application/json'})
-          .end(JSON.stringify(infos))
+        res.json(infos);
       })
 
 export default serverInfo;

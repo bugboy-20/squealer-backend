@@ -11,9 +11,7 @@ const postComment : Middleware = catchServerError( async (req, res) => {
 
     const savedComment = await comment.save()
 
-    res
-      .writeHead(201, {'Content-Type': 'application/json'})
-      .end(JSON.stringify(savedComment));
+    res.status(201).json(savedComment);
 
   })
 
@@ -22,11 +20,7 @@ const getComments : Middleware = catchServerError( async (req, res) => {
 
     const comments = CommentModel.find({ reference: refID })
 
-    let j = JSON.stringify(await comments.exec());
-    res.writeHead(200, {
-      'Content-Type': 'application/json'
-    })
-    res.end(j)
+    res.json(await comments.exec())
 })
 
 

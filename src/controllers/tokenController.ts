@@ -29,12 +29,10 @@ const refreshTokenExpiresIn = '1m';
 
 const getToken: RequestHandler = catchServerError(async (req, res, next) => {
   const { username, password } = req.body;
-  if (!username || !password) {
-    res.statusCode = 400;
-    return res.end(
-      JSON.stringify({ message: 'Username and password are required.' })
-    );
-  }
+  if (!username || !password)
+    return res
+      .status(400)
+      .json({ message: 'Username and password are required.' });
 
   const user = await UserModel.findOne({ username }).exec();
 
@@ -100,91 +98,93 @@ const getToken: RequestHandler = catchServerError(async (req, res, next) => {
   res.end(accessToken);
 });
 
-const getRefreshToken: RequestHandler = catchServerError(async (req, res, next) => {
-  const cookies = cookie.parse(req.headers.cookie ?? '');
-  if (!cookies?.refresh_token) return send401(req, res, next);
-  const refreshToken = cookies.refresh_token;
-  res.clearCookie('access_token', cookieOptions); // no point in clearing the access token
+const getRefreshToken: RequestHandler = catchServerError(
+  async (req, res, next) => {
+    const cookies = cookie.parse(req.headers.cookie ?? '');
+    if (!cookies?.refresh_token) return send401(req, res, next);
+    const refreshToken = cookies.refresh_token;
+    res.clearCookie('access_token', cookieOptions); // no point in clearing the access token
 
-  const user = await UserModel.findOne({ refreshToken }).exec();
+    const user = await UserModel.findOne({ refreshToken }).exec();
 
-  // detected refresh token reuse
-  if (!user) {
-    const decoded = verifyJwt(refreshToken, 'REFRESH');
-    if (!decoded) return expiredRefreshToken(res);
+    // detected refresh token reuse
+    if (!user) {
+      const decoded = verifyJwt(refreshToken, 'REFRESH');
+      if (!decoded) return expiredRefreshToken(res);
 
-    // if someone is reusing a refresh token, there is a problem
-    // we delete every refresh token of that user
-    const hackedUser = await UserModel.findOne({
-      username: decoded.username,
-    }).exec();
+      // if someone is reusing a refresh token, there is a problem
+      // we delete every refresh token of that user
+      const hackedUser = await UserModel.findOne({
+        username: decoded.username,
+      }).exec();
 
-    if (!hackedUser) return expiredRefreshToken(res);
+      if (!hackedUser) return expiredRefreshToken(res);
 
-    // hackedUser.refreshToken = [];
-    // await hackedUser.save();
-    await UserModel.updateOne(
-      { _id: hackedUser._id },
-      { $set: { refreshToken: [] } }
+      // hackedUser.refreshToken = [];
+      // await hackedUser.save();
+      await UserModel.updateOne(
+        { _id: hackedUser._id },
+        { $set: { refreshToken: [] } }
+      );
+      return expiredRefreshToken(res);
+    }
+
+    const newRefreshTokenArray = user.refreshToken.filter(
+      (rt) => rt !== refreshToken
     );
-    return expiredRefreshToken(res);
-  }
 
-  const newRefreshTokenArray = user.refreshToken.filter(
-    (rt) => rt !== refreshToken
-  );
+    const decoded = verifyJwt(refreshToken, 'REFRESH');
+    if (!decoded) {
+      await UserModel.updateOne(
+        { _id: user._id },
+        { $set: { refreshToken: [...newRefreshTokenArray] } }
+      );
+      return expiredRefreshToken(res);
+    }
+    if (user.username !== decoded.username) {
+      return expiredRefreshToken(res);
+    }
 
-  const decoded = verifyJwt(refreshToken, 'REFRESH');
-  if (!decoded) {
+    const accessToken = sign(
+      { username: decoded.username, type: user.type },
+      process.env.ACCESS_TOKEN_SECRET as string,
+      { expiresIn: accessTokenExpiresIn }
+    );
+
+    const newRefreshToken = sign(
+      { username: user.username, type: user.type },
+      process.env.REFRESH_TOKEN_SECRET as string,
+      { expiresIn: refreshTokenExpiresIn }
+    );
+
+    // save the new refresh token in db with the user
+    // user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
+    // await user.save();
+
     await UserModel.updateOne(
       { _id: user._id },
-      { $set: { refreshToken: [...newRefreshTokenArray] } }
+      { $set: { refreshToken: [...newRefreshTokenArray, newRefreshToken] } }
     );
-    return expiredRefreshToken(res);
+
+    res.statusCode = 200;
+    res.cookie('access_token', accessToken, {
+      ...cookieOptions,
+      maxAge: accessTokenMaxAge,
+    });
+    res.cookie('refresh_token', newRefreshToken, {
+      ...cookieOptions,
+      maxAge: refreshTokenMaxAge,
+    });
+    res.cookie('logged_in', true, {
+      ...cookieOptions,
+      httpOnly: false,
+      maxAge: refreshTokenMaxAge,
+    });
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.end(accessToken);
   }
-  if (user.username !== decoded.username) {
-    return expiredRefreshToken(res);
-  }
-
-  const accessToken = sign(
-    { username: decoded.username, type: user.type },
-    process.env.ACCESS_TOKEN_SECRET as string,
-    { expiresIn: accessTokenExpiresIn }
-  );
-
-  const newRefreshToken = sign(
-    { username: user.username, type: user.type },
-    process.env.REFRESH_TOKEN_SECRET as string,
-    { expiresIn: refreshTokenExpiresIn }
-  );
-
-  // save the new refresh token in db with the user
-  // user.refreshToken = [...newRefreshTokenArray, newRefreshToken];
-  // await user.save();
-
-  await UserModel.updateOne(
-    { _id: user._id },
-    { $set: { refreshToken: [...newRefreshTokenArray, newRefreshToken] } }
-  );
-
-  res.statusCode = 200;
-  res.cookie('access_token', accessToken, {
-    ...cookieOptions,
-    maxAge: accessTokenMaxAge,
-  });
-  res.cookie('refresh_token', newRefreshToken, {
-    ...cookieOptions,
-    maxAge: refreshTokenMaxAge,
-  });
-  res.cookie('logged_in', true, {
-    ...cookieOptions,
-    httpOnly: false,
-    maxAge: refreshTokenMaxAge,
-  });
-
-  res.setHeader('Content-Type', 'text/plain');
-  res.end(accessToken);
-});
+);
 
 const deleteToken: RequestHandler = catchServerError(async (req, res, next) => {
   const cookies = cookie.parse(req.headers.cookie ?? '');
