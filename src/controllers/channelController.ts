@@ -1,6 +1,7 @@
 
 import {RequestHandler} from 'express';
 import {Channel, ChannelModel} from '../models/channelModel';
+import {addSubcribedInfo} from '../utils/channelUtils';
 import {catchServerError} from '../utils/controllersUtils';
 
 /* TODO
@@ -54,6 +55,10 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     const chq : Channel | Channel[] | null = await channels.exec()
     if(!chq)
       res.statusCode = 404
+    
+    if(req.auth.username && chq) {
+      addSubcribedInfo(chq,req.auth.username)
+    }
 
     res.json(chq)
 

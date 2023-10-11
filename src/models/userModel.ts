@@ -16,7 +16,7 @@ interface User extends Document {
     week: number;
     month: number;
   }
-  subscribed: [];
+  subscriptions: string[];
   refreshToken: string[];
 }
 
@@ -85,7 +85,7 @@ const userSchema: Schema<User> = new Schema<User>({
     type: [String],
     default: []
   },
-  subscribed: {
+  subscriptions: {
     type: [String],
     default: []
   }

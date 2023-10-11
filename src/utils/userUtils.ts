@@ -20,7 +20,8 @@ function userBackToFront(user: User ) : userRead_t {
       maxD: (user.quote_modifier * (+(process.env.CHAR_PER_DAY as string))), // TODO è evitabile questo casting?
       maxW: (user.quote_modifier * (+(process.env.CHAR_PER_WEEK as string) )),
       maxM: (user.quote_modifier * (+(process.env.CHAR_PER_MONTH as string) ))
-  }
+  },
+  subscriptions: user.subscriptions
 
     
 

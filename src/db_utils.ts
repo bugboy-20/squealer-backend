@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import {UserModel} from "./models/userModel";
 const dbName = process.env.DBNAME
 const dbUser = process.env.DBUSER
 const dbPassword = process.env.DBPASSWORD
@@ -32,12 +33,10 @@ async function db_close() {
 // Lascio qui. nel caso volessimo aggiornare il DB senza resettarlo
 async function updateUsersWithDefault() {
   try {
-    const result = SquealModel.updateMany({}, {
-        $set: {
-            impressions: [],
-            positive_reaction: [],
-            negative_reaction: []
-        }
+    const result = UserModel.updateMany({}, {
+        $rename: {
+          subscribed: 'subscriptions'
+        },
     })
     //const result = await UserModel.find({ profilePicUrl: { $exists: false } }) // Filter for users without profilePicUrl
 

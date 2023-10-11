@@ -9,7 +9,7 @@ interface Channel extends Document {
   name: string;
   description: string;
   type: ChannelType;
-  subscribed: string[];
+  subscribed: boolean;
 }
 
 const channelSchema: Schema<Channel> = new Schema<Channel>({

@@ -70,4 +70,18 @@ const whoiam : RequestHandler = catchServerError ( async (req,res) => {
   res.redirect(req.auth.username)
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam};
+const subscribeToChannel : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username || req.auth.username
+  const channelName = req.params.channelName
+
+  if(!( username || channelName)) {
+    res.sendStatus(400).end()
+    return
+  }
+
+  res.json( await UserModel.updateOne( { username }, {$push: { subscriptions: channelName }}))
+  
+
+})
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel};
