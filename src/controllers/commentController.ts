@@ -6,8 +6,7 @@ import {send401} from "../utils/statusSenders";
 const postComment : Middleware = catchServerError( async (req, res) => {
     let comment : Comment = new CommentModel(req.body)
 
-    if(comment.reference != req.params.id)
-      return send401
+    comment.reference = req.params.refID
 
     const savedComment = await comment.save()
 
@@ -18,7 +17,9 @@ const postComment : Middleware = catchServerError( async (req, res) => {
 const getComments : Middleware = catchServerError( async (req, res) => {
     const refID = req.params.squealID;
 
-    const comments = CommentModel.find({ reference: refID })
+    const comments = CommentModel.find()
+    if ( refID )
+        comments.find({ reference: refID })
 
     res.json(await comments.exec())
 })

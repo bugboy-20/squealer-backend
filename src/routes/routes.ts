@@ -6,6 +6,7 @@ import squealRoutes from "./squealRouter";
 import tokenRoutes from "./tokenRoutes";
 import userRoutes from "./userRoutes";
 import mediaRoutes from "./mediaRoutes";
+import commentRoutes from "./commentRouter";
 
 let routelist : Array<(a : Express) => Express> = [
     userRoutes,
@@ -14,6 +15,7 @@ let routelist : Array<(a : Express) => Express> = [
     squealRoutes,
     channelRoutes,
     mediaRoutes,
+    commentRoutes, // TODO for dev only
     serverInfo
 ];
 

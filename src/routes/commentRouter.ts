@@ -9,7 +9,7 @@ import {parseJWT} from "../middleware/verifyJWT";
 
 const commentRoutes : (app : Express) => Express = app =>
   app
-    .get('/api/comment/:id?', getComments)
-    .post('/api/comment/:reference', postComment)
+    .get('/api/comments/:id?', getComments)
+    .post('/api/comments/:reference', postComment)
 
 export default commentRoutes;

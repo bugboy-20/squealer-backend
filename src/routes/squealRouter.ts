@@ -1,5 +1,5 @@
 import { Express } from "express"
-import {getComments} from "../controllers/commentController";
+import {getComments, postComment} from "../controllers/commentController";
 
 import {deleteSqueal, getSqueals, postSqueal, updateSqueal} from '../controllers/squealController';
 import {escapeQuery} from "../middleware/esapeChars";
@@ -13,8 +13,8 @@ const squealRoutes : (app : Express) => Express = app =>
     .post('/api/squeals/', postSqueal)
     .delete('/api/squeals/:id', deleteSqueal)
     .patch('/api/squeals/:id', updateSqueal)
-    .get('/api/squeal/:id/comments',getComments) // TODO restituture un 'albero'
-    .post('/api/squeals/:id/reply', send501)
+    .get('/api/squeals/:squealID/comments',getComments) // TODO restituture un 'albero'
+    .post('/api/squeals/:refID/reply', postComment)
 
 
 export default squealRoutes;

@@ -10,7 +10,7 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
     type: String,
     require: true
   }
-}).add(squealSchema).remove('category')
+}).add(squealSchema).remove('category').remove('receivers')
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
 
