@@ -47,11 +47,11 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
   
     switch (req.body.op) {
       case "viewed":
-        opType = { $push: {"impressions":req.params.authUsername}}; break
+        opType = { $push: {"impressions":req.auth.username}}; break
       case "upvote":
-        opType = { $push: {"positive_reaction":req.params.authUsername}}; break
+        opType = { $push: {"positive_reaction":req.auth.username}}; break
       case "downvote":
-        opType = { $push: {"negative_reaction":req.params.authUsername}}; break
+        opType = { $push: {"negative_reaction":req.auth.username}}; break
       default: res.statusCode = 400; opType = {}; break
     }
 

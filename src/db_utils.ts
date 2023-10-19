@@ -14,15 +14,13 @@ async function db_open() {
     })
     //.then(() => updateUsersWithDefault())
     .then(
-        () =>  console.log('Connesso, yeee'),
+        () => {
+          console.log('Connesso, yeee')
+          bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+            bucketName: 'media',
+          });
+        },
         (err) => console.error('Error:' + err)
-    ).then(
-     () => {
-         bucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
-          bucketName: 'media',
-        });
-
-     }
     )
 
 }
