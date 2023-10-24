@@ -94,16 +94,11 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 });
 
 squealSchema.pre('save', function (next) {
-  const uniqueElements = [...new Set(this.positive_reaction)];
-  this.positive_reaction = uniqueElements;
+  this.positive_reaction = [...new Set(this.positive_reaction)];
+  this.negative_reaction = [...new Set(this.negative_reaction)];
 
-  // Check for duplicates in the second array
-  for (const element of this.negative_reaction) {
-    if (uniqueElements.includes(element)) {
-      return next(new Error('Duplicate elements found in the secondArray.'));
-    }
-  }
-
+  // Elimino eventuale doppio voto
+  this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
   next();
 });
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);

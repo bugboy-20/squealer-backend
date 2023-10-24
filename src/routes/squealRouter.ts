@@ -2,9 +2,10 @@ import { Express } from "express"
 import {getComments, postComment} from "../controllers/commentController";
 
 import {deleteSqueal, getSqueals, postSqueal, updateSqueal} from '../controllers/squealController';
+import {auth, isAuth} from "../middleware/auth";
 import {escapeQuery} from "../middleware/esapeChars";
 import {parseJWT} from "../middleware/verifyJWT";
-import {send501} from "../utils/statusSenders";
+import {send403, send501} from "../utils/statusSenders";
 
 const squealRoutes : (app : Express) => Express = app =>
   app
@@ -12,7 +13,7 @@ const squealRoutes : (app : Express) => Express = app =>
     .get('/api/squeals/:id?', escapeQuery('channelName'), getSqueals)
     .post('/api/squeals/', postSqueal)
     .delete('/api/squeals/:id', deleteSqueal)
-    .patch('/api/squeals/:id', updateSqueal)
+    .patch('/api/squeals/:id', auth(isAuth, updateSqueal), send403)
     .get('/api/squeals/:squealID/comments',getComments) // TODO restituture un 'albero'
     .post('/api/squeals/:refID/reply', postComment)
 
