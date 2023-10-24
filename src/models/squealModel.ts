@@ -94,6 +94,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 });
 
 squealSchema.pre('save', function (next) {
+  // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
   this.negative_reaction = [...new Set(this.negative_reaction)];
 
