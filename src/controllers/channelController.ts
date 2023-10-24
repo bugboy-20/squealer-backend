@@ -1,6 +1,7 @@
 
 import {RequestHandler} from 'express';
 import {Channel, ChannelModel} from '../models/channelModel';
+import { User, UserModel } from '../models/userModel';
 import {addSubcribedInfo} from '../utils/channelUtils';
 import {catchServerError} from '../utils/controllersUtils';
 
@@ -25,6 +26,11 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     if( req.params.channelName ) {
       const channelName = req.params.channelName
       channels.findOne({ name: channelName })
+    }
+
+    if ( req.query.subscribed && req.auth.isAuth) {
+      let subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }) as User).subscriptions
+      channels.find({ name : {$in: subscribedChannels }})
     }
 
     if ( req.query.type)
