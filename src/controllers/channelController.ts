@@ -55,9 +55,9 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     const chq : Channel | Channel[] | null = await channels.exec()
     if(!chq)
       res.statusCode = 404
-    
+        
     if(req?.auth.isAuth && chq) {
-      res.json(addSubcribedInfo(chq,req.auth.username))
+      res.json(await addSubcribedInfo(chq,req.auth.username))
       return
     }
 

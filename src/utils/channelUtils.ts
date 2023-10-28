@@ -1,21 +1,21 @@
-import {Channel} from "../models/channelModel";
+import {Channel, ChannelModel} from "../models/channelModel";
 import { UserModel, User } from "../models/userModel";
 
 function addSubInfo(ch : Channel, subs : string[]) : Channel {
+  const newCh = {
+    name: ch.name,
+    description: ch.description,
+    type: ch.type,
+  }
 
-  subs.forEach(s => {
-    if ( s == ch.name ) {
-      ch.subscribed = true
-      return
-    }
-  })
+  if(subs.includes(ch.name))
+    newCh.subscribed = true
+  else
+    newCh.subscribed = false
 
-  if(!ch.subscribed)
-    ch.subscribed = false
 
-  return ch
+  return new ChannelModel(newCh)
 }
-
 async function addSubcribedInfo(ch : Channel | Channel[], username : string) : Promise<Channel | Channel[]> {
   
 
