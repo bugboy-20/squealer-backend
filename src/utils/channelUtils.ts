@@ -1,8 +1,8 @@
 import {Channel, ChannelModel} from "../models/channelModel";
-import { UserModel, User } from "../models/userModel";
+import { UserModel } from "../models/userModel";
 
 function addSubInfo(ch : Channel, subs : string[]) : Channel {
-  const newCh = {
+  const newCh : any = {
     name: ch.name,
     description: ch.description,
     type: ch.type,
@@ -17,7 +17,7 @@ function addSubInfo(ch : Channel, subs : string[]) : Channel {
   return new ChannelModel(newCh)
 }
 async function addSubcribedInfo(ch : Channel | Channel[], username : string) : Promise<Channel | Channel[]> {
-  
+
 
   let subs : string[] = await UserModel.findOne({username}).exec().then(u => u?.subscriptions).then(s => {
     if ( !s || s == undefined)
@@ -25,8 +25,6 @@ async function addSubcribedInfo(ch : Channel | Channel[], username : string) : P
     else {
       return (s as string[])
     }})
-
-  console.log(subs)
 
   if(Array.isArray(ch)) {
     return ch.map((channel : Channel) => addSubInfo(channel, subs))
