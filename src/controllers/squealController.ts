@@ -44,7 +44,6 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
 
   let squealID = req.params.id;
   let opType = req.body.op;
-  let dbRes;
   
     switch (req.body.op) {
       case "viewed":
@@ -56,12 +55,13 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
       default: res.statusCode = 400; opType = {}; break
     }
 
-    dbRes = await SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec()
-    if (dbRes)
-      res.json(dbRes)
-    else {
-      res.status(404).end();
-    }
+    SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec().then(dbRes => {
+      if (dbRes)
+        res.json(dbRes)
+      else {
+        res.status(404).end();
+      }
+    }).catch(e => {console.error('Errore' + JSON.stringify(e)); res.status(404).end()})
 
 })
 
