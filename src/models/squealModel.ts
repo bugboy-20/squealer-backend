@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, now } from 'mongoose'; //l'ha fatto ChatGPT 
+import mongoose, { Schema, Document, now } from 'mongoose';
 
 enum ContentType {
   Text = 'text',
@@ -99,6 +99,11 @@ squealSchema.pre('save', function (next) {
 
   // Elimino eventuale doppio voto
   this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
+
+  //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
+  const quota_used = this.body.content.length
+  UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
+
   next();
 });
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
