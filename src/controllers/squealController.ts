@@ -1,5 +1,6 @@
 import { Middleware } from "polka";
 import {Squeal, SquealModel} from "../models/squealModel";
+import { User, UserModel } from "../models/userModel";
 import {catchServerError} from "../utils/controllersUtils";
 import {squeal4NormalUser} from "../utils/SquealUtils";
 
@@ -83,8 +84,9 @@ const postSqueal : Middleware = catchServerError( async (req, res) => {
       return res.json({ message: 'Username already taken' });
     }*/
 
-    //res.sendStatus(202)
+    //res.sendStatus(202) 
     const savedSqueal = await squeal.save();
+
     res.status(201).json(savedSqueal);
   },400,'postSqueal error: ')
 

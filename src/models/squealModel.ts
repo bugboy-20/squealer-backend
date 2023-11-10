@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, now } from 'mongoose'; //l'ha fatto ChatGPT 
+import mongoose, { Schema, Document, now } from 'mongoose';
 
 enum ContentType {
   Text = 'text',
@@ -94,6 +94,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 });
 
 squealSchema.pre('save', function (next) {
+  // Impedisco di avere più di una reazione per utente
   const uniqueElements = [...new Set(this.positive_reaction)];
   this.positive_reaction = uniqueElements;
 
@@ -103,6 +104,10 @@ squealSchema.pre('save', function (next) {
       return next(new Error('Duplicate elements found in the secondArray.'));
     }
   }
+
+  //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
+  const quota_used = this.body.content.length
+  UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
 
   next();
 });
