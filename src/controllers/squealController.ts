@@ -57,7 +57,7 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
 
     SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec().then(dbRes => {
       if (dbRes)
-        res.json(dbRes)
+        res.json(squeal4NormalUser(dbRes))
       else {
         res.status(404).end();
       }
