@@ -87,7 +87,7 @@ const postSqueal : Middleware = catchServerError( async (req, res) => {
     //res.sendStatus(202) 
     const savedSqueal = await squeal.save();
 
-    res.status(201).json(savedSqueal);
+    res.status(201).json(squeal4NormalUser(savedSqueal));
   },400,'postSqueal error: ')
 
 const deleteSqueal : Middleware = catchServerError( async (req, res) => {
