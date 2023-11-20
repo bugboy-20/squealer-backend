@@ -24,6 +24,7 @@ import cors from "cors"
 import schedules from './schedules/schedules';
 import { credentials } from './middleware/credentials';
 import { corsOptions } from './utils/corsOptions';
+import path from 'path';
 
 /*
 const app = polka({
@@ -41,8 +42,9 @@ app
   //.use(addClearCookieFn)
   .use(credentials) // BEFORE CORS
   .use(cors(corsOptions))
-  .use('/',express.static(__dirname + '/../app'))
-  .use('/smm',express.static(__dirname + '/../smm'))
+  .use('/',express.static(path.join(__dirname, '../app')))
+  .use('/smm',express.static(path.join(__dirname, '../smm')))
+  .use("/moderator", express.static(path.join(__dirname, '../mod')))
   //.use(parseJWT)
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
