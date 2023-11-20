@@ -1,9 +1,12 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 
-enum ContentType {
-  Text = 'text',
-  Media = 'media'
-}
+const ContentEnum = {
+  Text: 'text',
+  Media: 'media',
+  Geo: 'geo',
+} as const;
+
+type ContentType = (typeof ContentEnum)[keyof typeof ContentEnum];
 
 interface SquealSMM extends Document {
   _id: string,
@@ -58,7 +61,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   body: {
     type: {
       type: String,
-      enum: [ContentType.Media, ContentType.Text],
+      enum: Object.values(ContentEnum),
       required: true
     },
     content: {
