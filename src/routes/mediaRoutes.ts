@@ -30,7 +30,7 @@ const mediaRoutes: (app: Express) => Express = (app) =>
     .use('/api/media/*',parseJWT)
     .post(
       '/api/media/',
-      catchServerError(upload.single('media'), 406),
+      catchServerError(async()=>upload.single('media'), 406),
       compressMedia,
       uploadMedia
     )
