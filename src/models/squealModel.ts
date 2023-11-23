@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
+import { squealReadSchema } from '../validators/squealValidators';
 
 const ContentEnum = {
   Text: 'text',
@@ -10,7 +11,6 @@ const ContentEnum = {
 type ContentType = (typeof ContentEnum)[keyof typeof ContentEnum];
 
 interface SquealSMM extends Document {
-  _id: string,
   receivers: string[],
   author: string,
   body: {
@@ -25,7 +25,6 @@ interface SquealSMM extends Document {
 }
 
 interface Squeal {
-  _id: string,
   receivers: string[],
   author: string,
   body: {
@@ -85,6 +84,22 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
     required: true,
     default: []
   }],
+},
+{
+  toObject: {
+    transform: function (doc, ret) {
+      if (doc.body.type === ContentEnum.Geo) {
+        ret.body.content = JSON.parse(doc.body.content);
+      }
+      ret.impressions = doc.impressions.length;
+      ret.positive_reaction = doc.positive_reaction.length;
+      ret.negative_reaction = doc.negative_reaction.length;
+      ret.id = doc._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      squealReadSchema.parse(ret);
+    },
+  },
 });
 
 squealSchema.pre('save', function (next) {
@@ -95,27 +110,12 @@ squealSchema.pre('save', function (next) {
   // Elimino eventuale doppio voto
   this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
 
-  // Trasformo il geojson in stringa
-  if(this.body.type === ContentEnum.Geo) {
-    this.body.content = JSON.stringify(this.body.content)
-  }
-
   //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
   const quota_used = this.body.content.length
   UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
 
   next();
 });
-
-function parseGeo(result: any) {
-  // Trasformo il geojson da stringa in oggetto
-  if(result.body.type === ContentEnum.Geo) {
-    result.body.content = JSON.parse(result.body.content)
-  }
-}
-
-squealSchema.post("findOne", parseGeo);
-squealSchema.post("find", parseGeo);
 
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
