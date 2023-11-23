@@ -6,6 +6,7 @@ import { UserModel } from '../models/userModel';
 import { verifyJwt } from '../utils/authorisation';
 import { catchServerError } from '../utils/controllersUtils';
 import { send204, send401 } from '../utils/statusSenders';
+import ms from 'ms';
 
 const expiredRefreshToken = (res: Response) => {
   res.clearCookie('logged_in', cookieOptions);
@@ -22,10 +23,10 @@ const cookieOptions: cookie.CookieSerializeOptions = {
   secure: process.env.NODE_ENV === 'production',
 };
 
-const accessTokenMaxAge = 30 * 1000; // 30s
-const refreshTokenMaxAge = 60 * 1000; //24 * 60 * 60 * 1000; // 1 day
-const accessTokenExpiresIn = '30s';
-const refreshTokenExpiresIn = '1m';
+const accessTokenExpiresIn = '1m';
+const refreshTokenExpiresIn = '7d';
+const accessTokenMaxAge = ms(accessTokenExpiresIn);
+const refreshTokenMaxAge = ms(refreshTokenExpiresIn);
 
 const getToken: RequestHandler = catchServerError(async (req, res, next) => {
   const { username, password } = req.body;
