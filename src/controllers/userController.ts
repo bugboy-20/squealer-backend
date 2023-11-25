@@ -84,4 +84,36 @@ const subscribeToChannel : RequestHandler = catchServerError ( async (req,res) =
 
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel};
+const addSMM : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username
+  const SMM = req.body.SMM
+  if (!username) { res.status(400).json({message: 'username not provided'}); return; }
+  if (!SMM) { res.status(400).json({message: 'SMM not provided'}); return; }
+  // check in the db if the SMM user exists
+  const smmUser = await UserModel.findOne({ username: SMM }).exec()
+  if (!smmUser) { res.status(400).json({message: 'SMM not found'}); return; }
+  // SMM should be a professional
+  if (smmUser.type !== 'professional') { res.status(400).json({message: 'SMM is not professional'}); return; }
+
+  const result = await UserModel.updateOne( { username }, {$set: { SMM }})
+  if (result.matchedCount > 0 || result.modifiedCount > 0) {
+    res.status(200).json({ message: 'Update successful' });
+  } else {
+    res.status(400).json({ message: 'Update failed' });
+  }
+})
+
+const deleteSMM : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username
+  if (!username) { res.status(400).json({message: 'username not provided'}); return; }
+
+
+  const result =await UserModel.updateOne( { username }, {$set: { SMM: null }})
+  if (result.matchedCount > 0 || result.modifiedCount > 0) {
+    res.status(200).json({ message: 'SMM deleted successfully' });
+  } else {
+    res.status(400).json({ message: 'SMM deletetion failed' });
+  }
+})
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, addSMM, deleteSMM};
