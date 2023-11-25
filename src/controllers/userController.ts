@@ -84,6 +84,22 @@ const subscribeToChannel : RequestHandler = catchServerError ( async (req,res) =
 
 })
 
+const unsubscribeFromChannel : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username || req.auth.username
+  const channelName = req.params.channelName
+
+  if(!username || username.trim() === '' || !channelName) {
+    res.sendStatus(400).end()
+    return
+  }
+  const result = await UserModel.updateOne( { username }, {$pull: { subscriptions: channelName }})
+  if (result.matchedCount > 0 || result.modifiedCount > 0) {
+    res.status(200).json({ message: 'Unsubscription successful' });
+  } else {
+    res.status(400).json({ message: 'Unsubscription failed' });
+  }
+})
+
 const addSMM : RequestHandler = catchServerError ( async (req,res) => {
   const username = req.params.username
   const SMM = req.body.SMM
@@ -116,4 +132,6 @@ const deleteSMM : RequestHandler = catchServerError ( async (req,res) => {
   }
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, addSMM, deleteSMM};
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM};
+
