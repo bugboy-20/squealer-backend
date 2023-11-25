@@ -6,16 +6,31 @@ import { RequestHandler } from "express";
 
 const getSqueals : Middleware = catchServerError( async (req, res) => {
 
-    let squeals = SquealModel.find()
+    const isAuth = req.auth.isAuth;
+    const authUsername = req.auth.username;
+    const userSubscriptions =
+      (
+        await UserModel.findOne(
+          { username: authUsername },
+          'subscriptions'
+        ).exec()
+      )?.subscriptions ?? [];
 
-    if ( req.params.id ) { //TODO valutare di sportre
-      console.log('entro qui')
-      let json = await squeals.findOne({_id: req.params.id}).exec()
-      if(json)
-        res.json(squeal4NormalUser(json))
-      else
-        res.status(404).end("Squeal doesn't exist");
-      return
+    const squeals = SquealModel.find();
+
+    if (req.params.id) {
+      //TODO valutare di sportre
+      const json = await squeals.findOne({ _id: req.params.id }).exec();
+      if (json) {
+        const response = squeal4NormalUser(json, {
+          isAuth,
+          authUsername,
+          userSubscriptions,
+        });
+        if (response.receivers.length > 0) return res.json(json);
+      }
+
+      return res.status(404).end("Squeal doesn't exist");
     }
     if ( req.params.channelName)
       squeals.find({ receivers: req.params.channelName});
@@ -53,13 +68,13 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
 
     squeals.sort("-datetime")
 
-    try {
-      res.json((await squeals.exec()).map(s => squeal4NormalUser(s)));
-    } catch(e) {
-      console.log('AAAAAAAAAAAAAA')
-      console.trace()
-      throw e
-    }
+    res.json(
+      (await squeals.exec())
+        .map((s) =>
+          squeal4NormalUser(s, { isAuth, authUsername, userSubscriptions })
+        )
+        .filter((s) => s.receivers.length > 0)
+    );
   })
 
 const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO gestire con autenticazione

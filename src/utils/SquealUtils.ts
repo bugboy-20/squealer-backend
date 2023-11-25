@@ -1,6 +1,26 @@
 import { SquealSMM , Squeal} from '../models/squealModel'
-function squeal4NormalUser(squealSMM : SquealSMM) : Squeal {
-  return squealSMM.toObject();
+
+function squeal4NormalUser(
+  squealSMM: SquealSMM,
+  filter?: {
+    isAuth: boolean;
+    authUsername: string;
+    userSubscriptions: string[];
+  }
+): Squeal {
+  const newReceivers = filter
+    ? filterReceivers(
+        filter.isAuth,
+        filter.authUsername,
+        filter.userSubscriptions,
+        squealSMM.author,
+        squealSMM.receivers
+      )
+    : squealSMM.receivers;
+
+  const parsedSqueal = squealSMM.toObject();
+  parsedSqueal.receivers = newReceivers;
+  return parsedSqueal;
 }
 
 function stringifyGeoBody(squeal: Squeal): Squeal {
@@ -46,6 +66,41 @@ function mutateReactions(
     }
   }
   return reactions;
+}
+
+function filterReceivers(
+  isAuth: boolean,
+  authUsername: string,
+  userSubscriptions: string[],
+  author: string,
+  receivers: string[]
+) {
+  /*
+  se l'utente non è autenticato, può vedere solo i messaggi ufficiali
+  se l'utente è autenticato, può vedere i messaggi ufficiali e "destinati" a lui
+    - suo username
+    - canali pubblici
+    - canali privati a cui appartiene
+    - keyword (iniziano con #)
+  se l'utente è autore del messaggio, può vedere tutti i destinatari
+*/
+
+  const officialRegex = /^§[A-Z]+$/;
+
+  if (!isAuth) {
+    // canale è ufficiale se inizia con § ed è tutto maiuscolo
+    return receivers.filter((r) => officialRegex.test(r));
+  }
+
+  if (author === authUsername) return receivers;
+
+  return receivers.filter(
+    (r) =>
+      r === authUsername ||
+      officialRegex.test(r) ||
+      userSubscriptions.includes(r) ||
+      r.startsWith('#')
+  );
 }
 
 export { squeal4NormalUser, stringifyGeoBody, mutateReactions };
