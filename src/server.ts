@@ -33,6 +33,7 @@ const app = polka({
 })*/
 
 const app = express()
+const basePath = path.join(__dirname, '../')
 
 console.log(process.env)
 console.log(new Date(Date.now()))
@@ -42,9 +43,9 @@ app
   //.use(addClearCookieFn)
   .use(credentials) // BEFORE CORS
   .use(cors(corsOptions))
-  .use('/',express.static(path.join(__dirname, '../app')))
-  .use('/smm',express.static(path.join(__dirname, '../smm')))
-  .use("/moderator", express.static(path.join(__dirname, '../mod')))
+  .use('/',express.static(path.join(basePath, 'app')))
+  .use('/smm',express.static(path.join(basePath, 'smm')))
+  .use("/moderator", express.static(path.join(basePath, 'mod')))
   //.use(parseJWT)
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
@@ -58,6 +59,15 @@ app
   })
 
 routes(app)
+
+app.get('/smm/*', (_, res) => {
+  res.sendFile(path.join(basePath, 'smm/index.html'));
+});
+
+app.get('*', (_, res) => {
+  res.sendFile(path.join(basePath, 'app/index.html'));
+});
+
 
 app
   .listen(8000)
