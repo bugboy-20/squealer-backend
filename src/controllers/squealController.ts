@@ -28,11 +28,16 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
         .skip(pNum*10) //TODO generalizzare
         .limit(10)
     }
-    if ( req.query.mention && typeof req.query.mention === "string") {
-      squeals.find({ "body.content": { $regex: new RegExp(req.query.mention), $options: 'i' }})
-    }
     if ( req.query.query && typeof req.query.query === "string") {
-      squeals.find({ receivers: { $regex: new RegExp(req.query.query), $options: 'i' }})
+      if(req.query.query.startsWith('@'))
+        squeals.find({ "body.content": { $regex: new RegExp(req.query.query), $options: 'i' }})
+      else if(req.query.query.startsWith('#') || req.query.query.startsWith('§'))
+        squeals.find({
+          $or: [
+            { receivers: { $regex: new RegExp(req.query.query), $options: 'i' }},
+            { "body.content": { $regex: new RegExp(req.query.query), $options: 'i' }},
+          ]
+        })
     }
 
 
