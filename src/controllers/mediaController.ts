@@ -45,10 +45,7 @@ export const compressMedia: RequestHandler = catchServerError(
     next();
   },
   500,
-  'Error compressing media file',
-  () => {
-    return 'Error compressing media file';
-  }
+  'Error compressing media file'
 );
 
 const uploadMedia: RequestHandler = catchServerError(async (req, res) => {
@@ -82,7 +79,7 @@ const uploadMedia: RequestHandler = catchServerError(async (req, res) => {
   uploadStream.end(file.buffer);
 });
 
-const getMedia: RequestHandler = catchServerError((req, res) => {
+const getMedia: RequestHandler = catchServerError(async (req, res) => {
   let fileId;
   try {
     fileId = new mongoose.mongo.ObjectId(req.params.id);
