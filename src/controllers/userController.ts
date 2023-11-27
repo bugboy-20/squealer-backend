@@ -79,7 +79,7 @@ const subscribeToChannel : RequestHandler = catchServerError ( async (req,res) =
     return
   }
 
-  res.json( await UserModel.updateOne( { username }, {$push: { subscriptions: channelName }}))
+  res.json( await UserModel.updateOne( { username }, {$push: { subscriptions: channelName }}).exec())
   
 
 })
@@ -92,7 +92,7 @@ const unsubscribeFromChannel : RequestHandler = catchServerError ( async (req,re
     res.sendStatus(400).end()
     return
   }
-  const result = await UserModel.updateOne( { username }, {$pull: { subscriptions: channelName }})
+  const result = await UserModel.updateOne( { username }, {$pull: { subscriptions: channelName }}).exec();
   if (result.matchedCount > 0 || result.modifiedCount > 0) {
     res.status(200).json({ message: 'Unsubscription successful' });
   } else {
