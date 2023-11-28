@@ -1,12 +1,16 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
+import { UserModel } from './userModel';
+import { squealReadSchema } from '../validators/squealValidators';
 
-enum ContentType {
-  Text = 'text',
-  Media = 'media'
-}
+const ContentEnum = {
+  Text: 'text',
+  Media: 'media',
+  Geo: 'geo',
+} as const;
+
+type ContentType = (typeof ContentEnum)[keyof typeof ContentEnum];
 
 interface SquealSMM extends Document {
-  _id: string,
   receivers: string[],
   author: string,
   body: {
@@ -21,7 +25,6 @@ interface SquealSMM extends Document {
 }
 
 interface Squeal {
-  _id: string,
   receivers: string[],
   author: string,
   body: {
@@ -33,16 +36,6 @@ interface Squeal {
   positive_reaction: number,
   negative_reaction: number,
   category: string[], //TODO a cosa serve category?
-}
-
-interface Squeal {
-  receivers: string[],
-  author: string,
-  body: {
-    type: ContentType,
-    content: string
-  },
-  category: string[],
 }
 
 
@@ -58,7 +51,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   body: {
     type: {
       type: String,
-      enum: [ContentType.Media, ContentType.Text],
+      enum: Object.values(ContentEnum),
       required: true
     },
     content: {
@@ -91,6 +84,22 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
     required: true,
     default: []
   }],
+},
+{
+  toObject: {
+    transform: function (doc, ret) {
+      if (doc.body.type === ContentEnum.Geo) {
+        ret.body.content = JSON.parse(doc.body.content);
+      }
+      ret.impressions = doc.impressions.length;
+      ret.positive_reaction = doc.positive_reaction.length;
+      ret.negative_reaction = doc.negative_reaction.length;
+      ret.id = doc._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      squealReadSchema.parse(ret);
+    },
+  },
 });
 
 squealSchema.pre('save', function (next) {
@@ -107,6 +116,7 @@ squealSchema.pre('save', function (next) {
 
   next();
 });
+
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
 export {Squeal, SquealSMM,SquealModel, squealSchema}

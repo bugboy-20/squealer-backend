@@ -1,18 +1,13 @@
 import { SquealSMM , Squeal} from '../models/squealModel'
 function squeal4NormalUser(squealSMM : SquealSMM) : Squeal {
-  return {
-    _id: squealSMM._id,
-    receivers: squealSMM.receivers,
-    author: squealSMM.author,
-    body: squealSMM.body,
-    datetime: squealSMM.datetime,
-    impressions: squealSMM.impressions.length,
-    positive_reaction: squealSMM.positive_reaction.length,
-    negative_reaction: squealSMM.negative_reaction.length,
-    category: squealSMM.category,
-  }
+  return squealSMM.toObject();
 }
 
+function stringifyGeoBody(squeal: Squeal): Squeal {
+  if (squeal.body.type === 'geo') {
+    squeal.body.content = JSON.stringify(squeal.body.content);
+  }
+  return squeal;
+}
 
-
-export { squeal4NormalUser }
+export { squeal4NormalUser, stringifyGeoBody };
