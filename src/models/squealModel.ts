@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
 import { squealReadSchema } from '../validators/squealValidators';
+import { ChannelModel } from './channelModel';
 
 const ContentEnum = {
   Text: 'text',
@@ -102,7 +103,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   },
 });
 
-squealSchema.pre('save', function (next) {
+squealSchema.pre('save', async function (next) {
   // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
   this.negative_reaction = [...new Set(this.negative_reaction)];
@@ -113,6 +114,17 @@ squealSchema.pre('save', function (next) {
   //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
   const quota_used = this.body.content.length
   UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
+
+  // update the category metadata
+  // if the squeal as at least one public receiver, then it is public, otherwise it is private
+
+  const channelsName = this.receivers.filter(r => r.startsWith('§'))
+
+  const channels = await Promise.all(channelsName.map(c => ChannelModel.findOne({name: c})));
+  const isPublic = channels.some(c => c?.type === 'public');
+
+  if (isPublic) this.category = ['public']
+  else this.category = ['private'];
 
   next();
 });
