@@ -1,10 +1,10 @@
-import { Middleware } from "polka";
+import { RequestHandler } from "express";
 import {Squeal, SquealModel} from "../models/squealModel";
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
 import { RequestHandler } from "express";
 
-const getSqueals : Middleware = catchServerError( async (req, res) => {
+const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     const isAuth = req.auth.isAuth;
     const authUsername = req.auth.username;
@@ -69,7 +69,7 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
     res.json(response);
   })
 
-const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO gestire con autenticazione
+const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO gestire con autenticazione
 
 
   let squealID = req.params.id;
@@ -95,7 +95,7 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
 
 })
 
-const postSqueal : Middleware = catchServerError( async (req, res) => {
+const postSqueal : RequestHandler = catchServerError( async (req, res) => {
 
     let inSqueal : Squeal = stringifyGeoBody(req.body);
     
@@ -120,7 +120,7 @@ const postSqueal : Middleware = catchServerError( async (req, res) => {
     res.status(201).json(await squeal4NormalUser(savedSqueal));
   },400,'postSqueal error: ')
 
-const deleteSqueal : Middleware = catchServerError( async (req, res) => {
+const deleteSqueal : RequestHandler = catchServerError( async (req, res) => {
 
     const id  = req.params.id
 
