@@ -9,7 +9,7 @@ import {auth, isAuth} from "../middleware/auth";
 
 const channelRoutes : (app : Express) => Express = app =>
   app
-  .use('/api/channels/*',parseJWT)
+  .use('/api/channels/',parseJWT)
   .get('/api/channels/:channelName?', escapeParam('channelName'), getChannels)
   .get('/api/channels/:channelName/squeals', escapeParam('channelName'), getSqueals)
   .post('/api/channels/', addChannel)

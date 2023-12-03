@@ -27,7 +27,7 @@ const upload = multer({
 
 const mediaRoutes: (app: Express) => Express = (app) => 
   app
-    .use('/api/media/*',parseJWT)
+    .use('/api/media/',parseJWT)
     .post(
       '/api/media/',
       catchServerError(async()=>upload.single('media'), 406),

@@ -9,7 +9,7 @@ import {send401, send501} from "../utils/statusSenders";
 const userRoutes : (app : Express) => Express = app => 
     app
       .post("/api/users/:nameOrEmail/password_reset", resetPassword)
-      .use('/api/users/*',parseJWT)
+      .use('/api/users/',parseJWT)
       .get('/api/users/', listAllUsers)// auth(isAuth, listAllUsers), send401)
       .get('/api/users/me', auth(isAuth, whoiam), send401)
       .get('/api/users/:username', findUser)// auth(isAuth, findUser), send401)
