@@ -4,7 +4,7 @@ import {getComments, postComment} from "../controllers/commentController";
 import {addReceiver, changeReactions, deleteSqueal, getSqueals, postSqueal, updateSqueal} from '../controllers/squealController';
 import {auth, isAuth} from "../middleware/auth";
 import {escapeQuery} from "../middleware/esapeChars";
-import {parseJWT} from "../middleware/verifyJWT";
+import {parseJWT} from "../middleware/parseJWT";
 import {send403, send501} from "../utils/statusSenders";
 
 const squealRoutes : (app : Express) => Express = app =>

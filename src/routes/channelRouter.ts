@@ -3,7 +3,7 @@ import {addChannel, changeDescription, deleteChannel, getChannels} from "../cont
 import {getSqueals} from "../controllers/squealController";
 import {subscribeToChannel, unsubscribeFromChannel} from "../controllers/userController";
 import {escapeParam} from "../middleware/esapeChars";
-import {parseJWT} from "../middleware/verifyJWT";
+import {parseJWT} from "../middleware/parseJWT";
 import {send401, send501} from "../utils/statusSenders";
 import {auth, isAuth} from "../middleware/auth";
 

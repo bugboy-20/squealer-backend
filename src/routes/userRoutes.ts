@@ -2,8 +2,7 @@ import { Express } from "express"
 
 import {listAllUsers, addUser, deleteUser, findUser, getQuote, whoiam, addSMM, deleteSMM, changePassword, resetPassword, changeQuote, changeBlockedStatus} from "../controllers/userController";
 import {and, auth, isModerator, sameUsername, isAuth, or} from "../middleware/auth";
-
-import {parseJWT} from "../middleware/verifyJWT";
+import {parseJWT} from "../middleware/parseJWT";
 import {send401, send501} from "../utils/statusSenders";
 
 const userRoutes : (app : Express) => Express = app => 

@@ -6,7 +6,7 @@ import {
   compressMedia,
 } from '../controllers/mediaController';
 import { catchServerError } from '../utils/controllersUtils';
-import {parseJWT} from '../middleware/verifyJWT';
+import {parseJWT} from '../middleware/parseJWT';
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter(req, file, callback) {
