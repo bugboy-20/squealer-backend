@@ -8,13 +8,6 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
 
     const isAuth = req.auth.isAuth;
     const authUsername = req.auth.username;
-    const userSubscriptions =
-      (
-        await UserModel.findOne(
-          { username: authUsername },
-          'subscriptions'
-        ).exec()
-      )?.subscriptions ?? [];
 
     const squeals = SquealModel.find();
 
@@ -22,12 +15,11 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
       //TODO valutare di sportre
       const json = await squeals.findOne({ _id: req.params.id }).exec();
       if (json) {
-        const response = squeal4NormalUser(json, {
+        const response = await squeal4NormalUser(json, {
           isAuth,
-          authUsername,
-          userSubscriptions,
+          authUsername
         });
-        if (response.receivers.length > 0) return res.json(json);
+        if (response.receivers.length > 0) return res.json(response);
       }
 
       return res.status(404).end("Squeal doesn't exist");
@@ -68,13 +60,13 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
 
     squeals.sort("-datetime")
 
-    res.json(
-      (await squeals.exec())
-        .map((s) =>
-          squeal4NormalUser(s, { isAuth, authUsername, userSubscriptions })
-        )
-        .filter((s) => s.receivers.length > 0)
-    );
+    const result = await squeals.exec();
+    const response = (
+      await Promise.all(
+        result.map((s) => squeal4NormalUser(s, { isAuth, authUsername }))
+      )
+    ).filter((s) => s.receivers.length > 0);
+    res.json(response);
   })
 
 const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO gestire con autenticazione
@@ -93,9 +85,9 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
       default: res.statusCode = 400; opType = {}; break
     }
 
-    SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec().then(dbRes => {
+    SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec().then(async dbRes => {
       if (dbRes)
-        res.json(squeal4NormalUser(dbRes))
+        res.json(await squeal4NormalUser(dbRes))
       else {
         res.status(404).end();
       }
@@ -125,7 +117,7 @@ const postSqueal : Middleware = catchServerError( async (req, res) => {
     //res.sendStatus(202) 
     const savedSqueal = await squeal.save();
 
-    res.status(201).json(squeal4NormalUser(savedSqueal));
+    res.status(201).json(await squeal4NormalUser(savedSqueal));
   },400,'postSqueal error: ')
 
 const deleteSqueal : Middleware = catchServerError( async (req, res) => {

@@ -1,20 +1,21 @@
-import { SquealSMM , Squeal} from '../models/squealModel'
+import { ChannelModel } from '../models/channelModel';
+import { Squeal, SquealSMM } from '../models/squealModel';
+import { UserModel } from '../models/userModel';
 
-function squeal4NormalUser(
+async function squeal4NormalUser(
   squealSMM: SquealSMM,
   filter?: {
     isAuth: boolean;
     authUsername: string;
-    userSubscriptions: string[];
   }
-): Squeal {
+): Promise<Squeal> {
   const newReceivers = filter
-    ? filterReceivers(
+    ? await filterReceivers(
         filter.isAuth,
         filter.authUsername,
-        filter.userSubscriptions,
         squealSMM.author,
-        squealSMM.receivers
+        squealSMM.receivers,
+        squealSMM.category
       )
     : squealSMM.receivers;
 
@@ -68,12 +69,12 @@ function mutateReactions(
   return reactions;
 }
 
-function filterReceivers(
+async function filterReceivers(
   isAuth: boolean,
   authUsername: string,
-  userSubscriptions: string[],
   author: string,
-  receivers: string[]
+  receivers: string[],
+  category: string[]
 ) {
   /*
   se l'utente non è autenticato, può vedere solo i messaggi ufficiali
@@ -94,11 +95,33 @@ function filterReceivers(
 
   if (author === authUsername) return receivers;
 
+  // create a map of channels and their type
+
+  const channelsMap = (await Promise.all(
+    receivers
+      .filter((r) => r.startsWith('§'))
+      .map((r) => ChannelModel.findOne({ name: r }))
+  )).reduce((acc: Record<string, string>, c) => {
+    if (c) {
+      acc[c.name] = c.type;
+    }
+    return acc;
+  }, {});
+
+  const userSubscriptions =
+    (
+      await UserModel.findOne(
+        { username: authUsername },
+        'subscriptions'
+      ).exec()
+    )?.subscriptions ?? [];
+
   return receivers.filter(
     (r) =>
       r === authUsername ||
       officialRegex.test(r) ||
-      userSubscriptions.includes(r) ||
+      channelsMap[r] === 'public' ||
+      (userSubscriptions.includes(r) && channelsMap[r] === 'private') ||
       r.startsWith('#')
   );
 }
