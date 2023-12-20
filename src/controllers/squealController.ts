@@ -9,6 +9,7 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
     let squeals = SquealModel.find()
 
     if ( req.params.id ) { //TODO valutare di sportre
+      console.log('entro qui')
       let json = await squeals.findOne({_id: req.params.id}).exec()
       if(json)
         res.json(squeal4NormalUser(json))
@@ -42,8 +43,15 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
         })
     }
 
+    squeals.sort("-datetime")
 
-    res.json((await squeals.exec()).map(s => squeal4NormalUser(s)));
+    try {
+      res.json((await squeals.exec()).map(s => squeal4NormalUser(s)));
+    } catch(e) {
+      console.log('AAAAAAAAAAAAAA')
+      console.trace()
+      throw e
+    }
   })
 
 const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO gestire con autenticazione
