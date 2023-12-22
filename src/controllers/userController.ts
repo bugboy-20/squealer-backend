@@ -32,6 +32,26 @@ const getQuote : RequestHandler = catchServerError( async (req, res) => {
     res.json(userBackToFront(user).quota);
 })
 
+const changeQuote : RequestHandler = catchServerError( async (req, res) => {
+    const user = await UserModel.findOne({ username: req.params.username }).exec()
+    if (!user) {
+      return res.status(404).end()
+    }
+
+    const newQuote = req.body.quota;
+    if (!newQuote) {
+      return res.status(400).json({ message: 'No new quote provided' });
+    }
+
+    if(newQuote.day < 0 || newQuote.week < 0 || newQuote.month < 0 || newQuote.week >= 7 * newQuote.day || newQuote.month >= 4*newQuote.week) {
+      return res.status(400).json({ message: 'Invalid quote' });
+    }
+
+    user.quote = newQuote;
+    await user.save();
+    res.json(userBackToFront(user).quota);
+})
+
 
 
 const addUser : RequestHandler = catchServerError( async (req, res) => {
@@ -133,5 +153,5 @@ const deleteSMM : RequestHandler = catchServerError ( async (req,res) => {
 })
 
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM};
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM};
 
