@@ -6,9 +6,22 @@ import {userBackToFront, userFrontToBack} from '../utils/userUtils';
 import { catchServerError } from '../utils/controllersUtils';
 
 const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
-    const users: User[] = await UserModel.find().exec();
-    res.json(users.map(u => userBackToFront(u)));
-  },500,'listAllUsers error: ')
+  const username = req.query.username;
+  const type = req.query.type;
+  const popularity = req.query.popularity;
+  // TODO: add popularity filter
+
+  const query: any = {};
+  if (typeof username === 'string') {
+    query.username = { $regex: username, $options: 'i' };
+  }
+  if (typeof type === 'string') {
+    query.type = type;
+  }
+
+  const users: User[] = await UserModel.find(query).exec();
+  res.json(users.map(u => userBackToFront(u)));
+},500,'listAllUsers error: ')
 
 const findUser : RequestHandler = catchServerError( async (req, res) => {
     const username = req.params.username;
@@ -158,7 +171,7 @@ const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) 
   if (!username) { res.status(400).json({message: 'username not provided'}); return; }
   if (!blocked) { res.status(400).json({message: 'blocked not provided'}); return; }
   if(typeof blocked !== 'boolean') { res.status(400).json({message: 'blocked must be a boolean'}); return; }
-
+  
   const user = await UserModel.findOne({ username }).exec()
   if (!user) { res.status(400).json({message: 'user not found'}); return; }
 
