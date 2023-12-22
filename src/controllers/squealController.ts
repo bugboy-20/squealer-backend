@@ -120,11 +120,11 @@ const addReceiver: RequestHandler = catchServerError(async (req, res) => {
   const receiver = req.body.receiver;
   const squeal = await SquealModel.findOne({ _id: squealId }).exec();
   if (!squeal) {
-    res.status(404).end();
+    res.status(404).end("Squeal doesn't exist");
     return;
   }
   if (squeal.receivers.includes(receiver)) {
-    res.status(409).end();
+    res.status(409).end("Receiver already exists");
     return;
   }
   squeal.receivers.push(receiver);
