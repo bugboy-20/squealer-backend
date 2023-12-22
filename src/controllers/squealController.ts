@@ -3,6 +3,7 @@ import {Squeal, SquealModel} from "../models/squealModel";
 import { User, UserModel } from "../models/userModel";
 import {catchServerError} from "../utils/controllersUtils";
 import {squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
+import { RequestHandler } from "express";
 
 const getSqueals : Middleware = catchServerError( async (req, res) => {
 
@@ -114,5 +115,35 @@ const deleteSqueal : Middleware = catchServerError( async (req, res) => {
     res.json({ log: `${id} deleted`})
 })
 
+const addReceiver: RequestHandler = catchServerError(async (req, res) => {
+  const squealId = req.params.id;
+  const receiver = req.body.receiver;
+  const squeal = await SquealModel.findOne({ _id: squealId }).exec();
+  if (!squeal) {
+    res.status(404).end();
+    return;
+  }
+  if (squeal.receivers.includes(receiver)) {
+    res.status(409).end();
+    return;
+  }
+  squeal.receivers.push(receiver);
+  await squeal.save();
+  res.json(squeal4NormalUser(squeal));
+})
 
-export {postSqueal, getSqueals, deleteSqueal, updateSqueal};
+const changeReactions: RequestHandler = catchServerError(async (req, res) => {
+  const squealId = req.params.id;
+  const squeal = await SquealModel.findOne({ _id: squealId }).exec();
+  if (!squeal) {
+    res.status(404).end();
+    return;
+  }
+  const {positve, negative} = req.body;
+  console.log(positve, negative)
+  // TODO: find a way actually add the reactions
+
+  res.json(squeal4NormalUser(squeal));
+})
+
+export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions};
