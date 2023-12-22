@@ -3,7 +3,7 @@ const dbName = process.env.DBNAME
 const dbUser = process.env.DBUSER
 const dbPassword = process.env.DBPASSWORD
 const dbHost = process.env.DBHOST
-const dbProtocol = process.env.DBPROTOCOL
+const dbProtocol = process.env.DBPROTOCOL ?? "mongodb"
 
 
 async function db_open() {
