@@ -1,13 +1,13 @@
 import mongoose from "mongoose";
-import {UserModel} from "./models/userModel";
 const dbName = process.env.DBNAME
 const dbUser = process.env.DBUSER
 const dbPassword = process.env.DBPASSWORD
 const dbHost = process.env.DBHOST
+const dbProtocol = process.env.DBPROTOCOL
 
 
 async function db_open() {
-    const url = `mongodb://${dbUser}:${dbPassword}@${dbHost}/${dbName}`;
+    const url = `${dbProtocol}://${dbUser}:${dbPassword}@${dbHost}/${dbName}`;
 
     mongoose.connect(url, {
                     authSource: 'admin'
