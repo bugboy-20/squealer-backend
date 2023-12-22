@@ -16,6 +16,7 @@ interface User extends Document {
     week: number;
     month: number;
   }
+  blocked: boolean;
   subscriptions: string[];
   refreshToken: string[];
 }
@@ -64,6 +65,11 @@ const userSchema: Schema<User> = new Schema<User>({
   },
   verified: {
     required: true,
+    type: Boolean
+  },
+  blocked: {
+    required: true,
+    default: false,
     type: Boolean
   },
   quote_modifier: {

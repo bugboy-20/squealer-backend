@@ -152,6 +152,24 @@ const deleteSMM : RequestHandler = catchServerError ( async (req,res) => {
   }
 })
 
+const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username
+  const blocked = req.body.blocked
+  if (!username) { res.status(400).json({message: 'username not provided'}); return; }
+  if (!blocked) { res.status(400).json({message: 'blocked not provided'}); return; }
+  if(typeof blocked !== 'boolean') { res.status(400).json({message: 'blocked must be a boolean'}); return; }
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM};
+  const user = await UserModel.findOne({ username }).exec()
+  if (!user) { res.status(400).json({message: 'user not found'}); return; }
+
+  const result = await UserModel.updateOne( { username }, {$set: { blocked }})
+  if (result.matchedCount > 0 || result.modifiedCount > 0) {
+    res.status(200).json({ message: 'Update successful' });
+  } else {
+    res.status(400).json({ message: 'Update failed' });
+  }
+})
+
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus};
 

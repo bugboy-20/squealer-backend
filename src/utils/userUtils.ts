@@ -21,7 +21,8 @@ function userBackToFront(user: User ) : userRead_t {
       maxW: (user.quote_modifier * (+(process.env.CHAR_PER_WEEK as string) )),
       maxM: (user.quote_modifier * (+(process.env.CHAR_PER_MONTH as string) ))
   },
-  subscriptions: user.subscriptions
+  subscriptions: user.subscriptions,
+  blocked: user.blocked
 
     
 
