@@ -6,7 +6,7 @@ import {send401} from "../utils/statusSenders";
 const postComment : Middleware = catchServerError( async (req, res) => {
     let comment : Comment = new CommentModel(req.body)
 
-    comment.reference = req.params.refID
+    comment.reference = req.params.referenceID
 
     const savedComment = await comment.save()
 
@@ -14,7 +14,7 @@ const postComment : Middleware = catchServerError( async (req, res) => {
 
   })
 
-const getComments : Middleware = catchServerError( async (req, res) => {
+const getComments : Middleware = catchServerError( async (req, res) => { // credo sia meglio se è il 
     const refID = req.params.squealID;
 
     const comments = CommentModel.find()
@@ -24,6 +24,13 @@ const getComments : Middleware = catchServerError( async (req, res) => {
     res.json(await comments.exec())
 })
 
+const deleteComment : Middleware = catchServerError( async (req, res) => {
 
+    const id  = req.params.id
 
-export { postComment, getComments}
+    await CommentModel.deleteOne({ _id : id})
+    
+    res.json({ log: `${id} deleted`})
+})
+
+export { postComment, getComments, deleteComment}

@@ -1,6 +1,8 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
+import { Comment } from './commentModel';
 import { squealReadSchema } from '../validators/squealValidators';
+import {getCommentsForASqueal} from '../utils/commentUtils';
 
 const ContentEnum = {
   Text: 'text',
@@ -25,6 +27,7 @@ interface SquealSMM extends Document {
 }
 
 interface Squeal {
+  id : string,
   receivers: string[],
   author: string,
   body: {
@@ -36,6 +39,7 @@ interface Squeal {
   positive_reaction: number,
   negative_reaction: number,
   category: string[], //TODO a cosa serve category?
+  comments: Comment[]
 }
 
 
@@ -87,7 +91,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 },
 {
   toObject: {
-    transform: function (doc, ret) {
+    transform: async function (doc, ret) {
       if (doc.body.type === ContentEnum.Geo) {
         ret.body.content = JSON.parse(doc.body.content);
       }
@@ -98,6 +102,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
       delete ret._id;
       delete ret.__v;
       squealReadSchema.parse(ret);
+      ret.comments = getCommentsForASqueal(ret.id)
     },
   },
 });
