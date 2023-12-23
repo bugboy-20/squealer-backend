@@ -2,14 +2,13 @@
 import {hash} from 'bcrypt';
 import {RequestHandler} from 'express';
 import {User,UserModel} from '../models/userModel'
-import {userBackToFront, userFrontToBack} from '../utils/userUtils';
+import {getPopularity, userBackToFront, userFrontToBack} from '../utils/userUtils';
 import { catchServerError } from '../utils/controllersUtils';
 
 const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
   const username = req.query.username;
   const type = req.query.type;
-  const popularity = req.query.popularity;
-  // TODO: add popularity filter
+  const popularity = req.query.popularity ?? 'descending';
 
   const query: any = {};
   if (typeof username === 'string') {
@@ -19,9 +18,20 @@ const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
     query.type = type;
   }
 
-  const users: User[] = await UserModel.find(query).exec();
-  res.json(users.map(u => userBackToFront(u)));
-},500,'listAllUsers error: ')
+  const users = await UserModel.find(query).exec();
+
+  const popularityMap = new Map();
+  for (const user of users) {
+    const popularity = await getPopularity(user.username);
+    popularityMap.set(user.username, popularity);
+  }
+
+  const sortedUsers = users
+    .toSorted((a, b) => popularity === 'ascending' ? popularityMap.get(a.username) - popularityMap.get(b.username) : popularityMap.get(b.username) - popularityMap.get(a.username))
+    .map(user => userBackToFront(user));
+
+  res.json(sortedUsers);
+},500)
 
 const findUser : RequestHandler = catchServerError( async (req, res) => {
     const username = req.params.username;
