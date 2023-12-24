@@ -27,8 +27,17 @@ const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
   }
 
   const sortedUsers = users
-    .toSorted((a, b) => popularity === 'ascending' ? popularityMap.get(a.username) - popularityMap.get(b.username) : popularityMap.get(b.username) - popularityMap.get(a.username))
-    .map(user => userBackToFront(user));
+    .toSorted((a, b) => {
+      const diff =
+        popularity === 'ascending'
+          ? popularityMap.get(a.username) - popularityMap.get(b.username)
+          : popularityMap.get(b.username) - popularityMap.get(a.username);
+      if (diff !== 0) return diff;
+      return popularity === 'ascending'
+        ? b.username.localeCompare(a.username)
+        : a.username.localeCompare(b.username);
+    })
+    .map((user) => userBackToFront(user));
 
   res.json(sortedUsers);
 },500)
@@ -179,7 +188,7 @@ const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) 
   const username = req.params.username
   const blocked = req.body.blocked
   if (!username) { res.status(400).json({message: 'username not provided'}); return; }
-  if (!blocked) { res.status(400).json({message: 'blocked not provided'}); return; }
+  if (blocked !== false && !blocked) { res.status(400).json({message: 'blocked not provided'}); return; }
   if(typeof blocked !== 'boolean') { res.status(400).json({message: 'blocked must be a boolean'}); return; }
   
   const user = await UserModel.findOne({ username }).exec()

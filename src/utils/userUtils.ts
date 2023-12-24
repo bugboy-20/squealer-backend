@@ -15,20 +15,18 @@ function userBackToFront(user: User ) : userRead_t {
     SMM: user.SMM,
     verified: user.verified,
     quota: {
-      actualD: user.quote?.day,
-      actualW: user.quote?.week,
-      actualM: user.quote?.month,
-      maxD: (user.quote_modifier * (+(process.env.CHAR_PER_DAY as string))), // TODO è evitabile questo casting?
-      maxW: (user.quote_modifier * (+(process.env.CHAR_PER_WEEK as string) )),
-      maxM: (user.quote_modifier * (+(process.env.CHAR_PER_MONTH as string) ))
-  },
-  subscriptions: user.subscriptions,
-  blocked: user.blocked
+      actualD: user.quote?.day ?? 0,
+      actualW: user.quote?.week ?? 0,
+      actualM: user.quote?.month ?? 0,
+      maxD: user.quote_modifier * +(process.env.CHAR_PER_DAY as string), // TODO è evitabile questo casting?
+      maxW: user.quote_modifier * +(process.env.CHAR_PER_WEEK as string),
+      maxM: user.quote_modifier * +(process.env.CHAR_PER_MONTH as string),
+    },
+    subscriptions: user.subscriptions,
+    blocked: user.blocked,
+  };
 
-    
-
-  }
-  return userReadSchema.parse(userFront)
+  return userReadSchema.parse(userFront);
 }
 
 function userFrontToBack(userTmp: userWrite_t) : User {
