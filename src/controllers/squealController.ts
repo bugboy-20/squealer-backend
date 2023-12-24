@@ -20,8 +20,16 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
     }
     if ( req.params.channelName)
       squeals.find({ receivers: req.params.channelName});
-    if ( req.query.author)
-      squeals.find({ author:  req.query.author});
+    if (req.query.author) {
+      squeals.find({ author: { $regex: req.query.author, $options: "i" } });
+    }
+    if ( req.query.receiver) {
+      squeals.find({ receivers: { $regex: req.query.receiver, $options: "i" }});
+    }
+    if(req.query.date){
+      let date = new Date(req.query.date as string)
+      squeals.find({ datetime: { $gte: date } })
+    }
     if ( req.query.channel)
       squeals.find({ receivers:  req.query.channel})
     //TODO cathegory
