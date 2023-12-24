@@ -13,6 +13,12 @@ import { channelSchema } from '../validators/channelValidator';
 
 const addChannel : RequestHandler = catchServerError(
   async (req, res) => {
+    const channelName = req.body.name;
+    const channel = await ChannelModel.findOne({ name: channelName }).exec();
+    if (channel) {
+      res.status(409).json({ error: `Channel ${channelName} already exists` });
+      return;
+    }
     const log = new ChannelModel(channelSchema.parse(req.body));
     const savedChannel = await log.save();
     res.json(channelSchema.parse(savedChannel));
