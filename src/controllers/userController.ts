@@ -70,16 +70,16 @@ const changeQuote : RequestHandler = catchServerError( async (req, res) => {
       return res.status(404).end()
     }
 
-    const newQuote = req.body.quota;
-    if (!newQuote) {
+    const dailyQuota = req.body.dailyQuota;
+    if (dailyQuota !== 0 && !dailyQuota) {
       return res.status(400).json({ message: 'No new quote provided' });
     }
 
-    if(newQuote.day < 0 || newQuote.week < 0 || newQuote.month < 0 || newQuote.week >= 7 * newQuote.day || newQuote.month >= 4*newQuote.week) {
+    if(dailyQuota < 0 || dailyQuota > user.quote_modifier * +(process.env.CHAR_PER_DAY as string)) {
       return res.status(400).json({ message: 'Invalid quote' });
     }
 
-    user.quote = newQuote;
+    user.quote.day = dailyQuota;
     await user.save();
     res.json(userBackToFront(user).quota);
 })
@@ -194,12 +194,10 @@ const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) 
   const user = await UserModel.findOne({ username }).exec()
   if (!user) { res.status(400).json({message: 'user not found'}); return; }
 
-  const result = await UserModel.updateOne( { username }, {$set: { blocked }})
-  if (result.matchedCount > 0 || result.modifiedCount > 0) {
-    res.status(200).json({ message: 'Update successful' });
-  } else {
-    res.status(400).json({ message: 'Update failed' });
-  }
+  user.blocked = blocked
+  await user.save()
+
+  res.json(userBackToFront(user))
 })
 
 
