@@ -83,7 +83,7 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
 
 const postSqueal : Middleware = catchServerError( async (req, res) => {
 
-    let inSqueal : Squeal = stringifyGeoBody(req.body);
+    let inSqueal : SquealUser = stringifyGeoBody(req.body);
     
     /*
     inSqueal.impressions = 0;
