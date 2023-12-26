@@ -1,11 +1,12 @@
 import { Express } from "express"
-import {listAllUsers, addUser, deleteUser, findUser, getQuote, whoiam, addSMM, deleteSMM} from "../controllers/userController";
+import {listAllUsers, addUser, deleteUser, findUser, getQuote, whoiam, addSMM, deleteSMM, resetPassword} from "../controllers/userController";
 import {and, auth, isModerator, sameUsername, isAuth} from "../middleware/auth";
 import {parseJWT} from "../middleware/verifyJWT";
 import {send401, send501} from "../utils/statusSenders";
 
 const userRoutes : (app : Express) => Express = app => 
     app
+      .post("/api/users/:nameOrEmail/password_reset", resetPassword)
       .use('/api/users/*',parseJWT)
       .get('/api/users/', listAllUsers)// auth(isAuth, listAllUsers), send401)
       .get('/api/users/me', auth(isAuth, whoiam), send401)
