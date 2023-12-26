@@ -133,6 +133,26 @@ const deleteSMM : RequestHandler = catchServerError ( async (req,res) => {
   }
 })
 
+const changePassword : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username
+  const { oldPassword, newPassword } = req.body
+  if (!username) { res.status(400).json({message: 'username not provided'}); return; }
+  if (!oldPassword) { res.status(400).json({message: 'old password not provided'}); return; }
+  if (!newPassword) { res.status(400).json({message: 'new password not provided'}); return; }
+
+  // check in the db if the user exists and the old password is correct
+  const user = await UserModel.findOne({ username }).exec();
+  if (!user || !(await compare(oldPassword, user.password))) { res.status(401).json({message: 'old password not valid'}); return; }
+
+  const hashedPassword = await hashPassword(newPassword);
+
+  const result = await UserModel.updateOne( { username }, {$set: { password: hashedPassword }})
+  if (result.matchedCount > 0 || result.modifiedCount > 0) {
+    res.status(200).json({ message: 'Password changed successfully' });
+  } else {
+    res.status(400).json({ message: 'Password change failed' });
+  }
+})
 
 const resetPassword : RequestHandler = catchServerError ( async (req,res) => {
   const usernameOrEmail = req.params.nameOrEmail;
@@ -174,5 +194,5 @@ const resetPassword : RequestHandler = catchServerError ( async (req,res) => {
   }
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, resetPassword};
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changePassword, resetPassword};
 
