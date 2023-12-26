@@ -2,6 +2,10 @@ import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
 import { squealReadSchema } from '../validators/squealValidators';
 
+import { ChannelModel } from './channelModel';
+import {getCommentsForASqueal} from '../utils/commentUtils';
+
+
 const ContentEnum = {
   Text: 'text',
   Media: 'media',
@@ -24,18 +28,20 @@ interface SquealSMM extends Document {
   category: string[], //TODO a cosa serve category?
 }
 
-interface Squeal {
+interface SquealUser {
+  id : string,
   receivers: string[],
   author: string,
   body: {
     type: ContentType,
-    content: string
+    content: string | object //TODO vede se esiste tipo più specifico
   },
   datetime: Date,
   impressions: number,
   positive_reaction: number,
   negative_reaction: number,
   category: string[], //TODO a cosa serve category?
+  comments: Comment[]
 }
 
 
@@ -85,24 +91,9 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
     default: []
   }],
 },
-{
-  toObject: {
-    transform: function (doc, ret) {
-      if (doc.body.type === ContentEnum.Geo) {
-        ret.body.content = JSON.parse(doc.body.content);
-      }
-      ret.impressions = doc.impressions.length;
-      ret.positive_reaction = doc.positive_reaction.length;
-      ret.negative_reaction = doc.negative_reaction.length;
-      ret.id = doc._id.toString();
-      delete ret._id;
-      delete ret.__v;
-      squealReadSchema.parse(ret);
-    },
-  },
-});
+);
 
-squealSchema.pre('save', function (next) {
+squealSchema.pre('save', async function (next) {
   // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
   this.negative_reaction = [...new Set(this.negative_reaction)];
@@ -114,9 +105,35 @@ squealSchema.pre('save', function (next) {
   const quota_used = this.body.content.length
   UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
 
+  // update the category metadata
+  // if the squeal as at least one public receiver, then it is public, otherwise it is private
+
+  const channelsName = this.receivers.filter(r => r.startsWith('§'))
+
+  const channels = await Promise.all(channelsName.map(c => ChannelModel.findOne({name: c})));
+  const isPublic = channels.some(c => c?.type === 'public');
+
+  if (isPublic) this.category = ['public']
+  else this.category = ['private'];
+
   next();
 });
 
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
-export {Squeal, SquealSMM,SquealModel, squealSchema}
+
+interface Comment extends Omit<SquealSMM,'category'|'impressions'|'positive_reaction'|'negative_reaction'> {
+  reference: string,
+  comments: Comment[]
+}
+
+const commentSchema: Schema<Comment> = new Schema<Comment>({
+  reference : { // squeal or comment id
+    type: String,
+    require: true
+  }
+}).add(squealSchema).remove(['category','receivers','impressions','positive_reaction','negative_reaction'])
+
+const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
+
+export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };

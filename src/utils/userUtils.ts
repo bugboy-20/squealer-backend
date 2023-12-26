@@ -1,3 +1,4 @@
+import { SquealModel } from "../models/squealModel"
 import { User, UserModel } from "../models/userModel"
 import { userReadSchema, userRead_t, userWriteSchema, userWrite_t } from "../validators/userValidators"
 
@@ -14,19 +15,18 @@ function userBackToFront(user: User ) : userRead_t {
     SMM: user.SMM,
     verified: user.verified,
     quota: {
-      actualD: user.quote?.day,
-      actualW: user.quote?.week,
-      actualM: user.quote?.month,
-      maxD: (user.quote_modifier * (+(process.env.CHAR_PER_DAY as string))), // TODO è evitabile questo casting?
-      maxW: (user.quote_modifier * (+(process.env.CHAR_PER_WEEK as string) )),
-      maxM: (user.quote_modifier * (+(process.env.CHAR_PER_MONTH as string) ))
-  },
-  subscriptions: user.subscriptions
+      actualD: user.quote?.day ?? 0,
+      actualW: user.quote?.week ?? 0,
+      actualM: user.quote?.month ?? 0,
+      maxD: user.quote_modifier * +(process.env.CHAR_PER_DAY as string), // TODO è evitabile questo casting?
+      maxW: user.quote_modifier * +(process.env.CHAR_PER_WEEK as string),
+      maxM: user.quote_modifier * +(process.env.CHAR_PER_MONTH as string),
+    },
+    subscriptions: user.subscriptions,
+    blocked: user.blocked,
+  };
 
-    
-
-  }
-  return userReadSchema.parse(userFront)
+  return userReadSchema.parse(userFront);
 }
 
 function userFrontToBack(userTmp: userWrite_t) : User {
@@ -53,6 +53,19 @@ function userFrontToBack(userTmp: userWrite_t) : User {
 
 }
 
+const getPopularity = async (username: string) => {
+  // si calcola prendendo il numero di post popolari (Reazioni positive > Critical Mass) che l'utente ha fatto
+  const squeals = await SquealModel.find({author: username}).exec();
+  let popularity = 0;
+  for (const squeal of squeals) {
+    //TODO: abstract the critical mass away from this function
+    const CM = squeal.impressions.length * 0.25
+    if (squeal.positive_reaction.length > CM) {
+      popularity++;
+    }
+  }
+  return popularity;
+}
 
-export {userBackToFront, userFrontToBack}
+export {userBackToFront, userFrontToBack, getPopularity}
 

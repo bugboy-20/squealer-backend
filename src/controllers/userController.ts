@@ -2,14 +2,46 @@
 import {compare} from 'bcrypt';
 import {RequestHandler} from 'express';
 import {User,UserModel} from '../models/userModel'
-import {userBackToFront, userFrontToBack} from '../utils/userUtils';
+import {getPopularity, userBackToFront, userFrontToBack} from '../utils/userUtils';
 import { catchServerError } from '../utils/controllersUtils';
 import { hashPassword, signJwt, verifyJwt } from '../utils/authorisation';
 
 const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
-    const users: User[] = await UserModel.find().exec();
-    res.json(users.map(u => userBackToFront(u)));
-  },500,'listAllUsers error: ')
+  const username = req.query.username;
+  const type = req.query.type;
+  const popularity = req.query.popularity ?? 'descending';
+
+  const query: any = {};
+  if (typeof username === 'string') {
+    query.username = { $regex: username, $options: 'i' };
+  }
+  if (typeof type === 'string') {
+    query.type = type;
+  }
+
+  const users = await UserModel.find(query).exec();
+
+  const popularityMap = new Map();
+  for (const user of users) {
+    const popularity = await getPopularity(user.username);
+    popularityMap.set(user.username, popularity);
+  }
+
+  const sortedUsers = users
+    .toSorted((a, b) => {
+      const diff =
+        popularity === 'ascending'
+          ? popularityMap.get(a.username) - popularityMap.get(b.username)
+          : popularityMap.get(b.username) - popularityMap.get(a.username);
+      if (diff !== 0) return diff;
+      return popularity === 'ascending'
+        ? b.username.localeCompare(a.username)
+        : a.username.localeCompare(b.username);
+    })
+    .map((user) => userBackToFront(user));
+
+  res.json(sortedUsers);
+},500)
 
 const findUser : RequestHandler = catchServerError( async (req, res) => {
     const username = req.params.username;
@@ -30,6 +62,26 @@ const getQuote : RequestHandler = catchServerError( async (req, res) => {
       return res.status(404).end()
     }
 
+    res.json(userBackToFront(user).quota);
+})
+
+const changeQuote : RequestHandler = catchServerError( async (req, res) => {
+    const user = await UserModel.findOne({ username: req.params.username }).exec()
+    if (!user) {
+      return res.status(404).end()
+    }
+
+    const dailyQuota = req.body.dailyQuota;
+    if (dailyQuota !== 0 && !dailyQuota) {
+      return res.status(400).json({ message: 'No new quote provided' });
+    }
+
+    if(dailyQuota < 0 || dailyQuota > user.quote_modifier * +(process.env.CHAR_PER_DAY as string)) {
+      return res.status(400).json({ message: 'Invalid quote' });
+    }
+
+    user.quote.day = dailyQuota;
+    await user.save();
     res.json(userBackToFront(user).quota);
 })
 
@@ -133,6 +185,7 @@ const deleteSMM : RequestHandler = catchServerError ( async (req,res) => {
   }
 })
 
+
 const changePassword : RequestHandler = catchServerError ( async (req,res) => {
   const username = req.params.username
   const { oldPassword, newPassword } = req.body
@@ -194,5 +247,24 @@ const resetPassword : RequestHandler = catchServerError ( async (req,res) => {
   }
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changePassword, resetPassword};
+
+const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req.params.username
+  const blocked = req.body.blocked
+  if (!username) { res.status(400).json({message: 'username not provided'}); return; }
+  if (blocked !== false && !blocked) { res.status(400).json({message: 'blocked not provided'}); return; }
+  if(typeof blocked !== 'boolean') { res.status(400).json({message: 'blocked must be a boolean'}); return; }
+  
+  const user = await UserModel.findOne({ username }).exec()
+  if (!user) { res.status(400).json({message: 'user not found'}); return; }
+
+  user.blocked = blocked
+  await user.save()
+
+  res.json(userBackToFront(user))
+})
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword};
+
+
 

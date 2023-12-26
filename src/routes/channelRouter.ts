@@ -1,5 +1,5 @@
 import { Express } from "express"
-import {addChannel, getChannels} from "../controllers/channelController";
+import {addChannel, changeDescription, deleteChannel, getChannels} from "../controllers/channelController";
 import {getSqueals} from "../controllers/squealController";
 import {subscribeToChannel, unsubscribeFromChannel} from "../controllers/userController";
 import {escapeParam} from "../middleware/esapeChars";
@@ -14,7 +14,9 @@ const channelRoutes : (app : Express) => Express = app =>
   .get('/api/channels/:channelName/squeals', escapeParam('channelName'), getSqueals)
   .post('/api/channels/', addChannel)
   .get('/api/channels/:channelName/subscriptions/', send501)
+  .patch('/api/channels/:channelName/description', changeDescription)
   .patch('/api/channels/:channelName/subscribe/', auth(isAuth, subscribeToChannel), send401)
   .delete('/api/channels/:channelName/subscribe/', auth(isAuth, unsubscribeFromChannel), send401)
+  .delete('/api/channels/:channelName', deleteChannel)
 
 export default channelRoutes;

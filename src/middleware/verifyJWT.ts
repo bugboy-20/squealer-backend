@@ -1,8 +1,8 @@
 import cookie from 'cookie';
-import { Middleware } from 'polka';
+import { RequestHandler } from 'express';
 import { verifyJwt } from '../utils/authorisation';
 
-export const parseJWT: Middleware = (req, res, next) => {
+export const parseJWT: RequestHandler = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const cookies = cookie.parse(req.headers.cookie ?? '');
   const message = 'Invalid token';
@@ -22,8 +22,8 @@ export const parseJWT: Middleware = (req, res, next) => {
   if (!access_token) {
     req.auth = {
       isAuth: false,
-      username: "",
-      usertype: "",
+      username: '',
+      usertype: '',
     };
     next();
   } else {
