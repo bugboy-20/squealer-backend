@@ -4,8 +4,8 @@
 import { Express } from "express"
 import {deleteComment, getComments, postComment} from "../controllers/commentController";
 import {auth, isAuth, sameUsername} from "../middleware/auth";
-import {parseJWT} from "../middleware/verifyJWT";
 import {send403} from "../utils/statusSenders";
+import {parseJWT} from "../middleware/parseJWT";
 
 const commentRoutes : (app : Express) => Express = app =>
   app

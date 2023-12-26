@@ -6,7 +6,7 @@ import {
   compressMedia,
 } from '../controllers/mediaController';
 import { catchServerError } from '../utils/controllersUtils';
-import {parseJWT} from '../middleware/verifyJWT';
+import {parseJWT} from '../middleware/parseJWT';
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter(req, file, callback) {
@@ -27,7 +27,7 @@ const upload = multer({
 
 const mediaRoutes: (app: Express) => Express = (app) => 
   app
-    .use('/api/media/*',parseJWT)
+    .use('/api/media/',parseJWT)
     .post(
       '/api/media/',
       catchServerError(async()=>upload.single('media'), 406),

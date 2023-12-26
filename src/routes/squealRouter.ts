@@ -4,12 +4,12 @@ import {getComments, postComment} from "../controllers/commentController";
 import {addReceiver, changeReactions, deleteSqueal, getSqueals, postSqueal, updateSqueal} from '../controllers/squealController';
 import {auth, isAuth} from "../middleware/auth";
 import {escapeQuery} from "../middleware/esapeChars";
-import {parseJWT} from "../middleware/verifyJWT";
+import {parseJWT} from "../middleware/parseJWT";
 import {send403, send501} from "../utils/statusSenders";
 
 const squealRoutes : (app : Express) => Express = app =>
   app
-    .use('/api/squeals/*',parseJWT)
+    .use('/api/squeals/',parseJWT)
     .get('/api/squeals/:id?', escapeQuery('channelName'), getSqueals)
     .post('/api/squeals/', postSqueal)
     .delete('/api/squeals/:id', deleteSqueal)
