@@ -1,5 +1,8 @@
 import { Middleware } from "polka";
-import {Squeal, SquealModel} from "../models/squealModel";
+
+import {SquealUser, SquealModel} from "../models/squealModel";
+import { User, UserModel } from "../models/userModel";
+
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
 import { RequestHandler } from "express";
@@ -8,11 +11,12 @@ const getSqueals : Middleware = catchServerError( async (req, res) => {
 
     let squeals = SquealModel.find()
 
-    if ( req.params.id ) { //TODO valutare di sportre
-      console.log('entro qui')
+    if ( req.params.id ) {
       let json = await squeals.findOne({_id: req.params.id}).exec()
-      if(json)
-        res.json(squeal4NormalUser(json))
+      if(json) {
+        console.log(json)
+        res.json(await squeal4NormalUser(json))
+      }
       else
         res.status(404).end("Squeal doesn't exist");
       return
@@ -90,7 +94,7 @@ const updateSqueal : Middleware = catchServerError( async (req, res) => { //TODO
 
 const postSqueal : Middleware = catchServerError( async (req, res) => {
 
-    let inSqueal : Squeal = stringifyGeoBody(req.body);
+    let inSqueal : SquealUser = stringifyGeoBody(req.body);
     
     /*
     inSqueal.impressions = 0;
