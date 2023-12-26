@@ -1,5 +1,9 @@
+
 import { RequestHandler } from "express";
-import {Squeal, SquealModel} from "../models/squealModel";
+
+import {SquealUser, SquealModel} from "../models/squealModel";
+import { User, UserModel } from "../models/userModel";
+
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
 import { RequestHandler } from "express";
@@ -10,6 +14,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     const authUsername = req.auth.username;
 
     const squeals = SquealModel.find();
+
 
     if (req.params.id) {
       //TODO valutare di sportre
@@ -23,6 +28,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
       }
 
       return res.status(404).end("Squeal doesn't exist");
+
     }
     if ( req.params.channelName)
       squeals.find({ receivers: req.params.channelName});
@@ -97,7 +103,7 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
 
 const postSqueal : RequestHandler = catchServerError( async (req, res) => {
 
-    let inSqueal : Squeal = stringifyGeoBody(req.body);
+    let inSqueal : SquealUser = stringifyGeoBody(req.body);
     
     /*
     inSqueal.impressions = 0;
