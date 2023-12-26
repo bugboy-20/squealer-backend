@@ -32,14 +32,14 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
       const channelName = req.params.channelName
       channels.findOne({ name: channelName })
     }
+    let subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }) as User).subscriptions
 
     if ( req.query.subscribed && req.auth.isAuth) {
-      let subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }) as User).subscriptions
       channels.find({ name : {$in: subscribedChannels }})
     }
 
     if ( req.query.type)
-      channels.find({type : req.query.type})
+      channels.find({type : req.query.type, name : {$in: subscribedChannels }})
 
     if ( req.query.official ) {
       let official : boolean
