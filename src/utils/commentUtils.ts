@@ -1,23 +1,19 @@
-import {Comment, CommentModel} from '../models/commentModel'
-import {Squeal, SquealModel} from '../models/squealModel'
+import {Comment, CommentModel} from '../models/squealModel'
 
 async function recursiveComments(comment: Comment) : Promise<Comment> {
   
   let subcomments : Comment[] = await CommentModel.find({reference: comment.id})
 
-  subcomments.forEach(c => recursiveComments(c))
-  comment.comments = subcomments
-
+  comment.comments = await Promise.all( subcomments.map(c => recursiveComments(c)))
+  
   return comment
 }
 
-async function getCommentsForASqueal(squeal: Squeal) : Promise<Comment[]> {
+async function getCommentsForASqueal(squealID: string) : Promise<Comment[]> {
   
-  let comments : Comment[] = await CommentModel.find({reference: squeal.id})
+  let comments : Comment[] = await CommentModel.find({reference: squealID})
 
-  comments.forEach(c => recursiveComments(c))
-
-  return comments
+  return await Promise.all( comments.map(c => recursiveComments(c)))
 
 }
 

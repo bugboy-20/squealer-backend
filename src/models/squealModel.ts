@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
-import { Comment } from './commentModel';
 import { squealReadSchema } from '../validators/squealValidators';
 import {getCommentsForASqueal} from '../utils/commentUtils';
 
@@ -26,13 +25,13 @@ interface SquealSMM extends Document {
   category: string[], //TODO a cosa serve category?
 }
 
-interface Squeal {
+interface SquealUser {
   id : string,
   receivers: string[],
   author: string,
   body: {
     type: ContentType,
-    content: string
+    content: string | object //TODO vede se esiste tipo più specifico
   },
   datetime: Date,
   impressions: number,
@@ -89,23 +88,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
     default: []
   }],
 },
-{
-  toObject: {
-    transform: async function (doc, ret) {
-      if (doc.body.type === ContentEnum.Geo) {
-        ret.body.content = JSON.parse(doc.body.content);
-      }
-      ret.impressions = doc.impressions.length;
-      ret.positive_reaction = doc.positive_reaction.length;
-      ret.negative_reaction = doc.negative_reaction.length;
-      ret.id = doc._id.toString();
-      delete ret._id;
-      delete ret.__v;
-      squealReadSchema.parse(ret);
-      ret.comments = getCommentsForASqueal(ret.id)
-    },
-  },
-});
+);
 
 squealSchema.pre('save', function (next) {
   // Impedisco di avere più di una reazione per utente
@@ -124,4 +107,19 @@ squealSchema.pre('save', function (next) {
 
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
-export {Squeal, SquealSMM,SquealModel, squealSchema}
+
+interface Comment extends Omit<SquealSMM,'category'|'impressions'|'positive_reaction'|'negative_reaction'> {
+  reference: string,
+  comments: Comment[]
+}
+
+const commentSchema: Schema<Comment> = new Schema<Comment>({
+  reference : { // squeal or comment id
+    type: String,
+    require: true
+  }
+}).add(squealSchema).remove(['category','receivers','impressions','positive_reaction','negative_reaction'])
+
+const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
+
+export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };

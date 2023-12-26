@@ -1,5 +1,5 @@
 import {Middleware} from "polka";
-import { Comment, CommentModel } from "../models/commentModel"
+import { Comment, CommentModel } from "../models/squealModel"
 import {catchServerError} from "../utils/controllersUtils";
 import {send401} from "../utils/statusSenders";
 
@@ -7,6 +7,10 @@ const postComment : Middleware = catchServerError( async (req, res) => {
     let comment : Comment = new CommentModel(req.body)
 
     comment.reference = req.params.referenceID
+
+    if(req.auth.isAuth) {
+        comment.author = req.auth.username
+    }
 
     const savedComment = await comment.save()
 
