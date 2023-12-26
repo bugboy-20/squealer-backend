@@ -4,9 +4,12 @@ async function recursiveComments(comment: Comment) : Promise<Comment> {
   
   let subcomments : Comment[] = await CommentModel.find({reference: comment.id})
 
-  comment.comments = await Promise.all( subcomments.map(c => recursiveComments(c)))
-  
-  return comment
+  let ret_comment = {
+    ...comment.toObject(),
+    comments : await Promise.all( subcomments.map(c => recursiveComments(c))),
+    id: comment._id
+  }
+  return ret_comment
 }
 
 async function getCommentsForASqueal(squealID: string) : Promise<Comment[]> {
