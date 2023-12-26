@@ -9,7 +9,7 @@ import {send403} from "../utils/statusSenders";
 
 const commentRoutes : (app : Express) => Express = app =>
   app
-    .use('/api/comments/*',parseJWT)
+    .use('/api/comments/',parseJWT)
     .get('/api/comments/:id?', getComments)
     .post('/api/comments/:referenceID', auth(isAuth, postComment), send403)
     .delete('/api/comments/:id?', auth(sameUsername, deleteComment), send403)
