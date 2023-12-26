@@ -1,9 +1,8 @@
 import { compare } from 'bcrypt';
 import cookie from 'cookie';
 import { Response, RequestHandler } from 'express';
-import { sign } from 'jsonwebtoken';
 import { UserModel } from '../models/userModel';
-import { verifyJwt } from '../utils/authorisation';
+import { verifyJwt, signJwt } from '../utils/authorisation';
 import { catchServerError } from '../utils/controllersUtils';
 import { send204, send401 } from '../utils/statusSenders';
 import ms from 'ms';
@@ -41,14 +40,14 @@ const getToken: RequestHandler = catchServerError(async (req, res, next) => {
     return send401(req, res, next);
 
   // create access token and refresh token
-  const accessToken = sign(
+  const accessToken = signJwt(
     { username: user.username, type: user.type },
-    process.env.ACCESS_TOKEN_SECRET as string,
+    'ACCESS',
     { expiresIn: accessTokenExpiresIn }
   );
-  const newRefreshToken = sign(
-    { username: user.username, type: user.type },
-    process.env.REFRESH_TOKEN_SECRET as string,
+  const newRefreshToken = signJwt(
+    { username: user.username },
+    'REFRESH',
     { expiresIn: refreshTokenExpiresIn }
   );
 
@@ -146,15 +145,15 @@ const getRefreshToken: RequestHandler = catchServerError(
       return expiredRefreshToken(res);
     }
 
-    const accessToken = sign(
-      { username: decoded.username, type: user.type },
-      process.env.ACCESS_TOKEN_SECRET as string,
+    const accessToken = signJwt(
+      { username: user.username, type: user.type },
+      'ACCESS',
       { expiresIn: accessTokenExpiresIn }
     );
 
-    const newRefreshToken = sign(
-      { username: user.username, type: user.type },
-      process.env.REFRESH_TOKEN_SECRET as string,
+    const newRefreshToken = signJwt(
+      { username: user.username },
+      'REFRESH',
       { expiresIn: refreshTokenExpiresIn }
     );
 
