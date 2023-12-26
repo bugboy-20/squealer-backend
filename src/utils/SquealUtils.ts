@@ -1,11 +1,27 @@
+
 import { SquealSMM , SquealUser, ContentEnum} from '../models/squealModel'
 import { getCommentsForASqueal} from '../utils/commentUtils'
 import {squealReadSchema} from '../validators/squealValidators'
 
-async function squeal4NormalUser(squealSMM : SquealSMM) : Promise<SquealUser> {
+async function squeal4NormalUser(
+      squealSMM : SquealSMM,
+      filter?: {
+      isAuth: boolean;
+      authUsername: string;
+      }
+    ) : Promise<SquealUser> {
+         const newReceivers = filter
+    ? await filterReceivers(
+        filter.isAuth,
+        filter.authUsername,
+        squealSMM.author,
+        squealSMM.receivers,
+        squealSMM.category
+      )
+    : squealSMM.receivers;
   let ret : SquealUser = {
     id: squealSMM._id.toString(),
-    receivers: squealSMM.receivers,
+    receivers: newReceivers,
     author: squealSMM.author,
     body: {
       type: squealSMM.body.type,
@@ -68,6 +84,63 @@ function mutateReactions(
     }
   }
   return reactions;
+}
+
+async function filterReceivers(
+  isAuth: boolean,
+  authUsername: string,
+  author: string,
+  receivers: string[],
+  category: string[]
+) {
+  /*
+  se l'utente non è autenticato, può vedere solo i messaggi ufficiali
+  se l'utente è autenticato, può vedere i messaggi ufficiali e "destinati" a lui
+    - suo username
+    - canali pubblici
+    - canali privati a cui appartiene
+    - keyword (iniziano con #)
+  se l'utente è autore del messaggio, può vedere tutti i destinatari
+*/
+
+  const officialRegex = /^§[A-Z]+$/;
+
+  if (!isAuth) {
+    // canale è ufficiale se inizia con § ed è tutto maiuscolo
+    return receivers.filter((r) => officialRegex.test(r));
+  }
+
+  if (author === authUsername) return receivers;
+
+  // create a map of channels and their type
+
+  const channelsMap = (await Promise.all(
+    receivers
+      .filter((r) => r.startsWith('§'))
+      .map((r) => ChannelModel.findOne({ name: r }))
+  )).reduce((acc: Record<string, string>, c) => {
+    if (c) {
+      acc[c.name] = c.type;
+    }
+    return acc;
+  }, {});
+
+  const userSubscriptions =
+    (
+      await UserModel.findOne(
+        { username: authUsername },
+        'subscriptions'
+      ).exec()
+    )?.subscriptions ?? [];
+
+  return receivers.filter(
+    (r) =>
+      r === authUsername ||
+      officialRegex.test(r) ||
+      channelsMap[r] === 'public' ||
+      (userSubscriptions.includes(r) && channelsMap[r] === 'private') ||
+      r.startsWith('#')
+  );
 }
 
 export { squeal4NormalUser, stringifyGeoBody, mutateReactions };
