@@ -1,16 +1,17 @@
-
-import { SquealSMM , SquealUser, ContentEnum} from '../models/squealModel'
-import { getCommentsForASqueal} from '../utils/commentUtils'
-import {squealReadSchema} from '../validators/squealValidators'
+import { ChannelModel } from '../models/channelModel';
+import { ContentEnum, SquealSMM, SquealUser } from '../models/squealModel';
+import { UserModel } from '../models/userModel';
+import { getCommentsForASqueal } from '../utils/commentUtils';
+import { squealReadSchema, squealRead_t } from '../validators/squealValidators';
 
 async function squeal4NormalUser(
-      squealSMM : SquealSMM,
-      filter?: {
-      isAuth: boolean;
-      authUsername: string;
-      }
-    ) : Promise<SquealUser> {
-         const newReceivers = filter
+  squealSMM: SquealSMM,
+  filter?: {
+    isAuth: boolean;
+    authUsername: string;
+  }
+): Promise<squealRead_t | null> {
+  const newReceivers = filter
     ? await filterReceivers(
         filter.isAuth,
         filter.authUsername,
@@ -19,26 +20,27 @@ async function squeal4NormalUser(
         squealSMM.category
       )
     : squealSMM.receivers;
-  let ret : SquealUser = {
+  const ret = {
     id: squealSMM._id.toString(),
     receivers: newReceivers,
     author: squealSMM.author,
     body: {
       type: squealSMM.body.type,
-      content: squealSMM.body.type === ContentEnum.Geo ? JSON.parse(squealSMM.body.content) : squealSMM.body.content
+      content:
+        squealSMM.body.type === ContentEnum.Geo
+          ? JSON.parse(squealSMM.body.content)
+          : squealSMM.body.content,
     },
-    datetime : squealSMM.datetime,
-    impressions : squealSMM.impressions.length,
-    positive_reaction : squealSMM.positive_reaction.length,
-    negative_reaction : squealSMM.negative_reaction.length,
-    category : squealSMM.category,
-    comments: []
-  }
-  console.log(`pre parse \n${ret}`)
-  let retZod = squealReadSchema.parse(ret); //TODO sistemare schema zod
-  console.log(`post parse \n${ret}`)
-  ret.comments = await getCommentsForASqueal(ret.id)
-  return ret
+    datetime: squealSMM.datetime,
+    impressions: squealSMM.impressions.length,
+    positive_reaction: squealSMM.positive_reaction.length,
+    negative_reaction: squealSMM.negative_reaction.length,
+    category: squealSMM.category,
+    comments: await getCommentsForASqueal(squealSMM._id.toString()),
+  };
+  const result = squealReadSchema.safeParse(ret);
+  if (!result.success) return null;
+  return result.data;
 }
 
 function stringifyGeoBody(squeal: SquealUser): SquealUser {
@@ -143,4 +145,5 @@ async function filterReceivers(
   );
 }
 
-export { squeal4NormalUser, stringifyGeoBody, mutateReactions };
+export { mutateReactions, squeal4NormalUser, stringifyGeoBody };
+
