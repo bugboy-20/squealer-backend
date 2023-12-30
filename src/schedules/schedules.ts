@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 //import {hello} from './helloSchedule';
-import {userQuotaReset} from './userQuotaSchedule';
+import {userQuotaReset, userMaxQuotaUpdater} from './userQuotaSchedule';
 /*
  # ┌────────────── second (optional)
  # │ ┌──────────── minute
@@ -23,24 +23,9 @@ day of week 	0-7 (or names, 0 or 7 are sunday)
 */
 
 let schedule : [string, () => void][] = [
-    userQuotaReset
+    userQuotaReset,
+    userMaxQuotaUpdater
 ].flat()
-//    hello  <-- just an example
-/*
-export default (polkaAPP : {[k: string]: any} , waitForEvent : string) => {
-    polkaAPP.cron = (cronExpression : string, fn : () => ()) => {
-        if (waitForEvent) {
-            polkaAPP.on(waitForEvent, () => {
-                cron.schedule(cronExpression, fn);
-            });
-        }
-        else {
-            cron.schedule(cronExpression, fn);
-        }
-    };
-
-
-};*/
 
 export default () => {
     schedule.forEach(s => {
