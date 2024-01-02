@@ -34,4 +34,4 @@ const comment4NormalUser = (comment: Comment): commentRead_t => {
   return commentReadSchema.parse(ret_comment)
 }
 
-export { getCommentsForASqueal }
+export { getCommentsForASqueal, comment4NormalUser }
