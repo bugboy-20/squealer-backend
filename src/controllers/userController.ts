@@ -222,7 +222,7 @@ const resetPassword : RequestHandler = catchServerError ( async (req,res) => {
     const guestToken = signJwt({ username: user.username, email: user.email }, "GUEST", { expiresIn: "1h" });
     const link = `${req.headers['x-forwarded-proto'] ?? 'http'}://${req.headers.host}/reset_password/?token=${guestToken}`;
     // we won't send the email for simplicity sake
-    res.status(202).json({message: `A reset link has been sent to ${user.email}`, link});
+    res.status(202).json({message: `A reset link has been sent to ${user.email}`, link, token: guestToken});
     return;
   }
 
