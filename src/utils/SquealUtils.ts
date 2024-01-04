@@ -1,5 +1,6 @@
 
 import { SquealSMM , SquealUser, ContentEnum} from '../models/squealModel'
+import {UserModel} from '../models/userModel';
 import { getCommentsForASqueal} from '../utils/commentUtils'
 import {squealReadSchema} from '../validators/squealValidators'
 
@@ -143,4 +144,19 @@ async function filterReceivers(
   );
 }
 
-export { squeal4NormalUser, stringifyGeoBody, mutateReactions };
+async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author : SquealSMM["author"]) {
+  let quotaUsed = 0;
+  if (!isPublic)
+    return
+
+  if (body.type == 'text')
+    quotaUsed = body.content.length
+  else if (body.type == 'media')
+    quotaUsed = 125
+
+  console.log(`è stata usata ${quotaUsed}, b type ${body}`)
+  await UserModel.updateOne({username: author}, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
+
+}
+
+export { squeal4NormalUser, stringifyGeoBody, mutateReactions, consumeQuota };

@@ -2,6 +2,8 @@ import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
 import { squealReadSchema } from '../validators/squealValidators';
 
+import { consumeQuota } from '../utils/SquealUtils';
+
 import { ChannelModel } from './channelModel';
 import {getCommentsForASqueal} from '../utils/commentUtils';
 
@@ -116,6 +118,7 @@ squealSchema.pre('save', async function (next) {
   if (isPublic) this.category = ['public']
   else this.category = ['private'];
 
+  await consumeQuota(this.body, isPublic, this.author)
   next();
 });
 
