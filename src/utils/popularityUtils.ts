@@ -42,7 +42,7 @@ async function isSquealUnpopularByID(id :string) : Promise<boolean> {
   if(!squeal)
     return false
 
-  return isSquealPopularByObject(await squeal4NormalUser(squeal))
+  return isSquealUnpopularByObject(await squeal4NormalUser(squeal))
 
 }
 
