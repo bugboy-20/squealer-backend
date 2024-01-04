@@ -1,8 +1,13 @@
 import { ChannelModel } from '../models/channelModel';
-import { ContentEnum, SquealSMM, SquealUser } from '../models/squealModel';
+import { SquealSMM, SquealUser, ContentEnum } from '../models/squealModel';
 import { UserModel } from '../models/userModel';
 import { getCommentsForASqueal } from '../utils/commentUtils';
 import { squealReadSchema, squealRead_t } from '../validators/squealValidators';
+import {
+  isSquealControversial,
+  isSquealPopular,
+  isSquealUnpopular,
+} from './popularityUtils';
 
 async function squeal4NormalUser(
   squealSMM: SquealSMM,
@@ -16,10 +21,21 @@ async function squeal4NormalUser(
         filter.isAuth,
         filter.authUsername,
         squealSMM.author,
-        squealSMM.receivers,
-        squealSMM.category
+        squealSMM.receivers
       )
     : squealSMM.receivers;
+
+  const channelsName = newReceivers.filter((r) => r.startsWith('§'));
+  const channels = await Promise.all(
+    channelsName.map((c) => ChannelModel.findOne({ name: c }))
+  );
+  const isPublic = channels.some((c) => c?.type === 'public');
+  const newCategory = isPublic ? ['public'] : ['private'];
+  if (await isSquealControversial(squealSMM.id))
+    newCategory.push('controversial');
+  else if (await isSquealPopular(squealSMM.id)) newCategory.push('popular');
+  else if (await isSquealUnpopular(squealSMM.id)) newCategory.push('unpopular');
+
   const ret = {
     id: squealSMM._id.toString(),
     receivers: newReceivers,
@@ -35,7 +51,7 @@ async function squeal4NormalUser(
     impressions: squealSMM.impressions.length,
     positive_reaction: squealSMM.positive_reaction.length,
     negative_reaction: squealSMM.negative_reaction.length,
-    category: squealSMM.category,
+    category: newCategory,
     comments: await getCommentsForASqueal(squealSMM._id.toString()),
   };
   const result = squealReadSchema.safeParse(ret);
@@ -92,8 +108,7 @@ async function filterReceivers(
   isAuth: boolean,
   authUsername: string,
   author: string,
-  receivers: string[],
-  category: string[]
+  receivers: string[]
 ) {
   /*
   se l'utente non è autenticato, può vedere solo i messaggi ufficiali
@@ -116,11 +131,13 @@ async function filterReceivers(
 
   // create a map of channels and their type
 
-  const channelsMap = (await Promise.all(
-    receivers
-      .filter((r) => r.startsWith('§'))
-      .map((r) => ChannelModel.findOne({ name: r }))
-  )).reduce((acc: Record<string, string>, c) => {
+  const channelsMap = (
+    await Promise.all(
+      receivers
+        .filter((r) => r.startsWith('§'))
+        .map((r) => ChannelModel.findOne({ name: r }))
+    )
+  ).reduce((acc: Record<string, string>, c) => {
     if (c) {
       acc[c.name] = c.type;
     }
@@ -146,4 +163,3 @@ async function filterReceivers(
 }
 
 export { mutateReactions, squeal4NormalUser, stringifyGeoBody };
-
