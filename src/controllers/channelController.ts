@@ -32,14 +32,18 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
       const channelName = req.params.channelName
       channels.findOne({ name: channelName })
     }
-    let subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }) as User).subscriptions
+    const subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }))?.subscriptions ?? []
+
+    const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
+
+    const visibleChannels = subscribedChannels.concat(publicChannels)
 
     if ( req.query.subscribed === "true" && req.auth.isAuth) {
       channels.find({ name : {$in: subscribedChannels }})
     }
 
     if ( req.query.type)
-      channels.find({type : req.query.type, name : {$in: subscribedChannels }})
+      channels.find({type : req.query.type, name : {$in: visibleChannels }})
 
     if ( req.query.official ) {
       let official : boolean
@@ -51,13 +55,15 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
       if (official)
         channels.find({
           name: {
-            $regex: /^§[A-Z]+.*$/
+            $regex: /^§[A-Z]+.*$/,
+            $in: visibleChannels
           }
         })
       else
         channels.find({
           name: {
-            $regex: /^§[a-z]+.*$/
+            $regex: /^§[a-z]+.*$/,
+            $in: visibleChannels
           }
         })
     }
