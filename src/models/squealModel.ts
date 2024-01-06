@@ -86,7 +86,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
 
-interface Comment extends Omit<SquealSMM,'category'|'impressions'|'positive_reaction'|'negative_reaction'> {
+interface Comment extends Omit<SquealSMM, 'receivers'|'impressions'|'positive_reaction'|'negative_reaction'> {
   reference: string,
   comments: Comment[]
 }
@@ -96,7 +96,7 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
     type: String,
     require: true
   }
-}).add(squealSchema).remove(['category','receivers','impressions','positive_reaction','negative_reaction'])
+}).add(squealSchema).remove(['receivers','impressions','positive_reaction','negative_reaction'])
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
 
