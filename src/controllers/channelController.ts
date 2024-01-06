@@ -26,59 +26,62 @@ const addChannel : RequestHandler = catchServerError(
   ,500)
 
 const getChannels : RequestHandler = catchServerError(async (req, res) => {
-    let channels = ChannelModel.find()
+  const officialRegex = /^§[A-Z]+.*$/
+  const nonOfficialRegex = /^§[a-z]+.*$/
 
-    if( req.params.channelName ) {
-      const channelName = req.params.channelName
+  const subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }))?.subscriptions ?? []
+  const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
+  const visibleChannels = subscribedChannels.concat(publicChannels)
+
+  const channels = ChannelModel.find({name : {$in: visibleChannels }})
+
+  if( req.params.channelName ) {
+    const channelName = req.params.channelName;
+    // if not authenticated, only official channels are visible
+    if( !req?.auth.isAuth && officialRegex.test(channelName) )
       channels.findOne({ name: channelName })
+    // if authenticated, only subscribed and public channels are visible
+    else if( req?.auth.isAuth )
+      channels.findOne({ name: { $regex: channelName, $in: visibleChannels } })
+    else {
+      res.sendStatus(404)
+      return;
     }
-    const subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }))?.subscriptions ?? []
-
-    const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
-
-    const visibleChannels = subscribedChannels.concat(publicChannels)
-
-    if ( req.query.subscribed === "true" && req.auth.isAuth) {
+  }
+  else if(req?.auth.isAuth) {
+    if ( req.query.subscribed === "true" )
       channels.find({ name : {$in: subscribedChannels }})
-    }
 
     if ( req.query.type)
-      channels.find({type : req.query.type, name : {$in: visibleChannels }})
+      channels.find({type : req.query.type})
 
-    if ( req.query.official ) {
-      let official : boolean
-      try {
-        official = JSON.parse( req.query.official as string )
-      } catch(_) {
-        return res.status(417).json( { error: `official has to be boolean, found "${req.query.official}"`})
-      }
-      if (official)
-        channels.find({
-          name: {
-            $regex: /^§[A-Z]+.*$/,
-            $in: visibleChannels
-          }
-        })
-      else
-        channels.find({
-          name: {
-            $regex: /^§[a-z]+.*$/,
-            $in: visibleChannels
-          }
-        })
-    }
+    if ( req.query.official === 'true' )
+      channels.find({
+        name: {$regex: officialRegex}
+      })
+    else if ( req.query.official === 'false' )
+      channels.find({
+        name: {$regex: nonOfficialRegex}
+      })
+  }
+  else 
+    channels.find({
+      name: {$regex: officialRegex}
+    });
+  
 
+  const result : Channel | Channel[] | null = await channels.exec()
+  if(!result){
+    res.sendStatus(404)
+    return;
+  }
 
-    const chq : Channel | Channel[] | null = await channels.exec()
-    if(!chq)
-      res.statusCode = 404
-        
-    if(req?.auth.isAuth && chq) {
-      res.json(await addSubcribedInfo(chq,req.auth.username))
-      return
-    }
+  if(req?.auth.isAuth) {
+    res.json(await addSubcribedInfo(result,req.auth.username))
+    return
+  }
 
-    res.json(chq)
+  res.json(result)
 
 },500)
 
