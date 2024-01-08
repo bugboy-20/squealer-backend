@@ -1,8 +1,11 @@
 
 import { SquealSMM , SquealUser, ContentEnum} from '../models/squealModel'
-import {UserModel} from '../models/userModel';
+import {User, UserModel} from '../models/userModel';
 import { getCommentsForASqueal} from '../utils/commentUtils'
 import {squealReadSchema} from '../validators/squealValidators'
+import {userRead_t} from '../validators/userValidators';
+import {userBackToFront} from './userUtils';
+import {ChannelModel } from '../models/channelModel';
 
 async function squeal4NormalUser(
       squealSMM : SquealSMM,
@@ -35,9 +38,6 @@ async function squeal4NormalUser(
     category : squealSMM.category,
     comments: []
   }
-  console.log(`pre parse \n${ret}`)
-  let retZod = squealReadSchema.parse(ret); //TODO sistemare schema zod
-  console.log(`post parse \n${ret}`)
   ret.comments = await getCommentsForASqueal(ret.id)
   return ret
 }
@@ -155,7 +155,15 @@ async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author
     quotaUsed = 125
 
   console.log(`è stata usata ${quotaUsed}, b type ${body}`)
-  await UserModel.updateOne({username: author}, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
+  let user : userRead_t = await UserModel.findOne({username: author}).exec().then(u => {if(!u) throw Error('?? consumeQuota'); else return userBackToFront(u)}) //, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
+  if (
+    user.quota.actualD + quotaUsed > user.quota.maxD &&
+    user.quota.actualW + quotaUsed > user.quota.maxW &&
+    user.quota.actualM + quotaUsed > user.quota.maxM
+  ) {
+    await UserModel.updateOne({username: author}, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
+  } else
+    throw Error('quota exceeded')
 
 }
 

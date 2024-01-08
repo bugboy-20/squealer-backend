@@ -3,6 +3,14 @@ import { User, UserModel } from "../models/userModel"
 import { userReadSchema, userRead_t, userWriteSchema, userWrite_t } from "../validators/userValidators"
 
 
+function maxQuotas(quotaModifier: number) {
+  return {
+      maxD: quotaModifier * +(process.env.CHAR_PER_DAY as string),
+      maxW: quotaModifier * +(process.env.CHAR_PER_WEEK as string),
+      maxM: quotaModifier * +(process.env.CHAR_PER_MONTH as string),
+  }
+}
+
 
 function userBackToFront(user: User ) : userRead_t {
   let userFront = {
@@ -18,9 +26,7 @@ function userBackToFront(user: User ) : userRead_t {
       actualD: user.quote?.day ?? 0,
       actualW: user.quote?.week ?? 0,
       actualM: user.quote?.month ?? 0,
-      maxD: user.quote_modifier * +(process.env.CHAR_PER_DAY as string), // TODO è evitabile questo casting?
-      maxW: user.quote_modifier * +(process.env.CHAR_PER_WEEK as string),
-      maxM: user.quote_modifier * +(process.env.CHAR_PER_MONTH as string),
+      ...maxQuotas(user.quote_modifier)
     },
     subscriptions: user.subscriptions,
     blocked: user.blocked,
@@ -67,5 +73,5 @@ const getPopularity = async (username: string) => {
   return popularity;
 }
 
-export {userBackToFront, userFrontToBack, getPopularity}
+export {userBackToFront, userFrontToBack, getPopularity, maxQuotas}
 
