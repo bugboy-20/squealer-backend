@@ -1,52 +1,83 @@
-
 import { SquealSMM , SquealUser, ContentEnum} from '../models/squealModel'
 import {User, UserModel} from '../models/userModel';
 import { getCommentsForASqueal} from '../utils/commentUtils'
-import {squealReadSchema} from '../validators/squealValidators'
+import { squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
 import {userRead_t} from '../validators/userValidators';
 import {userBackToFront} from './userUtils';
 import {ChannelModel } from '../models/channelModel';
 
+import { commentWrite_t } from '../validators/commentValidators';
+import {
+  isSquealControversial,
+  isSquealPopular,
+  isSquealUnpopular,
+} from './popularityUtils';
+
+
 async function squeal4NormalUser(
-      squealSMM : SquealSMM,
-      filter?: {
-      isAuth: boolean;
-      authUsername: string;
-      }
-    ) : Promise<SquealUser> {
-         const newReceivers = filter
+  squealSMM: SquealSMM,
+  filter?: {
+    isAuth: boolean;
+    authUsername: string;
+  }
+): Promise<squealRead_t | null> {
+  const newReceivers = filter
     ? await filterReceivers(
         filter.isAuth,
         filter.authUsername,
         squealSMM.author,
-        squealSMM.receivers,
-        squealSMM.category
+        squealSMM.receivers
       )
     : squealSMM.receivers;
-  let ret : SquealUser = {
+
+  const channelsName = newReceivers.filter((r) => r.startsWith('§'));
+  const channels = await Promise.all(
+    channelsName.map((c) => ChannelModel.findOne({ name: c }))
+  );
+  const isPublic = channels.some((c) => c?.type === 'public');
+  const newCategory = isPublic ? ['public'] : ['private'];
+  if (await isSquealControversial(squealSMM.id))
+    newCategory.push('controversial');
+  else if (await isSquealPopular(squealSMM.id)) newCategory.push('popular');
+  else if (await isSquealUnpopular(squealSMM.id)) newCategory.push('unpopular');
+
+  const ret = {
     id: squealSMM._id.toString(),
     receivers: newReceivers,
     author: squealSMM.author,
     body: {
       type: squealSMM.body.type,
-      content: squealSMM.body.type === ContentEnum.Geo ? JSON.parse(squealSMM.body.content) : squealSMM.body.content
+      content:
+        squealSMM.body.type === ContentEnum.Geo
+          ? JSON.parse(squealSMM.body.content)
+          : squealSMM.body.content,
     },
-    datetime : squealSMM.datetime,
-    impressions : squealSMM.impressions.length,
-    positive_reaction : squealSMM.positive_reaction.length,
-    negative_reaction : squealSMM.negative_reaction.length,
-    category : squealSMM.category,
-    comments: []
-  }
-  ret.comments = await getCommentsForASqueal(ret.id)
-  return ret
+
+    datetime: squealSMM.datetime,
+    impressions: squealSMM.impressions.length,
+    positive_reaction: squealSMM.positive_reaction.length,
+    negative_reaction: squealSMM.negative_reaction.length,
+    category: newCategory,
+    comments: await getCommentsForASqueal(squealSMM._id.toString()),
+  };
+  const result = squealReadSchema.safeParse(ret);
+  if (!result.success) return null;
+  return result.data;
 }
 
-function stringifyGeoBody(squeal: SquealUser): SquealUser {
-  if (squeal.body.type === 'geo') {
-    squeal.body.content = JSON.stringify(squeal.body.content);
+function stringifyGeoBody(
+  input: Pick<squealWrite_t, 'body'> | Pick<commentWrite_t, 'body'>
+): unknown {
+  if (input.body.type === 'geo') {
+    return {
+      ...input,
+      body: {
+        ...input.body,
+        content: JSON.stringify(input.body.content),
+      },
+    };
   }
-  return squeal;
+  return input;
 }
 
 function mutateReactions(
@@ -91,8 +122,7 @@ async function filterReceivers(
   isAuth: boolean,
   authUsername: string,
   author: string,
-  receivers: string[],
-  category: string[]
+  receivers: string[]
 ) {
   /*
   se l'utente non è autenticato, può vedere solo i messaggi ufficiali
@@ -115,11 +145,13 @@ async function filterReceivers(
 
   // create a map of channels and their type
 
-  const channelsMap = (await Promise.all(
-    receivers
-      .filter((r) => r.startsWith('§'))
-      .map((r) => ChannelModel.findOne({ name: r }))
-  )).reduce((acc: Record<string, string>, c) => {
+  const channelsMap = (
+    await Promise.all(
+      receivers
+        .filter((r) => r.startsWith('§'))
+        .map((r) => ChannelModel.findOne({ name: r }))
+    )
+  ).reduce((acc: Record<string, string>, c) => {
     if (c) {
       acc[c.name] = c.type;
     }

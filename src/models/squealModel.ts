@@ -1,11 +1,13 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import { UserModel } from './userModel';
+
 import { squealReadSchema } from '../validators/squealValidators';
 
 import { consumeQuota } from '../utils/SquealUtils';
 
 import { ChannelModel } from './channelModel';
 import {getCommentsForASqueal} from '../utils/commentUtils';
+
 
 
 const ContentEnum = {
@@ -27,7 +29,6 @@ interface SquealSMM extends Document {
   impressions: string[],
   positive_reaction: string[],
   negative_reaction: string[],
-  category: string[], //TODO a cosa serve category?
 }
 
 interface SquealUser {
@@ -42,7 +43,7 @@ interface SquealUser {
   impressions: number,
   positive_reaction: number,
   negative_reaction: number,
-  category: string[], //TODO a cosa serve category?
+  category: string[],
   comments: Comment[]
 }
 
@@ -86,15 +87,8 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
     type: [String],
     default: [],
     required: true
-  },
-  category: [{
-    type: String,
-    required: true,
-    default: []
-  }],
-},
-);
-
+});
+  
 squealSchema.pre('save', async function (next) {
   // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
@@ -120,12 +114,11 @@ squealSchema.pre('save', async function (next) {
 
   await consumeQuota(this.body, isPublic, this.author)
   next();
-});
 
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
 
-interface Comment extends Omit<SquealSMM,'category'|'impressions'|'positive_reaction'|'negative_reaction'> {
+interface Comment extends Omit<SquealSMM, 'receivers'|'impressions'|'positive_reaction'|'negative_reaction'> {
   reference: string,
   comments: Comment[]
 }
@@ -135,8 +128,25 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
     type: String,
     require: true
   }
-}).add(squealSchema).remove(['category','receivers','impressions','positive_reaction','negative_reaction'])
+}).add(squealSchema).remove(['receivers','impressions','positive_reaction','negative_reaction'])
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
+
+
+
+squealSchema.pre('save', async function (next) {
+  // Impedisco di avere più di una reazione per utente
+  this.positive_reaction = [...new Set(this.positive_reaction)];
+  this.negative_reaction = [...new Set(this.negative_reaction)];
+
+  // Elimino eventuale doppio voto
+  this.negative_reaction = this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
+
+  //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
+  const quota_used = this.body.content.length
+  UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
+
+  next();
+});
 
 export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };

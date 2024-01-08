@@ -1,10 +1,11 @@
 import {Middleware} from "polka";
-import { Comment, CommentModel } from "../models/squealModel"
+import { CommentModel } from "../models/squealModel"
 import {catchServerError} from "../utils/controllersUtils";
-import {send401} from "../utils/statusSenders";
+import { comment4NormalUser } from "../utils/commentUtils";
+import { stringifyGeoBody } from "../utils/SquealUtils";
 
 const postComment : Middleware = catchServerError( async (req, res) => {
-    let comment : Comment = new CommentModel(req.body)
+    let comment = new CommentModel(stringifyGeoBody(req.body))
 
     comment.reference = req.params.referenceID
 
@@ -14,7 +15,7 @@ const postComment : Middleware = catchServerError( async (req, res) => {
 
     const savedComment = await comment.save()
 
-    res.status(201).json(savedComment);
+    res.status(201).json(comment4NormalUser(savedComment));
 
   })
 
@@ -25,7 +26,7 @@ const getComments : Middleware = catchServerError( async (req, res) => { // cred
     if ( refID )
         comments.find({ reference: refID })
 
-    res.json(await comments.exec())
+    res.json((await comments.exec()).map(comment4NormalUser))
 })
 
 const deleteComment : Middleware = catchServerError( async (req, res) => {

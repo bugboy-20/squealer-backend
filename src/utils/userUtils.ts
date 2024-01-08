@@ -1,6 +1,7 @@
 import { SquealModel } from "../models/squealModel"
 import { User, UserModel } from "../models/userModel"
 import { userReadSchema, userRead_t, userWriteSchema, userWrite_t } from "../validators/userValidators"
+import {userPopularity} from "./popularityUtils";
 
 
 function maxQuotas(quotaModifier: number) {
@@ -59,19 +60,7 @@ function userFrontToBack(userTmp: userWrite_t) : User {
 
 }
 
-const getPopularity = async (username: string) => {
-  // si calcola prendendo il numero di post popolari (Reazioni positive > Critical Mass) che l'utente ha fatto
-  const squeals = await SquealModel.find({author: username}).exec();
-  let popularity = 0;
-  for (const squeal of squeals) {
-    //TODO: abstract the critical mass away from this function
-    const CM = squeal.impressions.length * 0.25
-    if (squeal.positive_reaction.length > CM) {
-      popularity++;
-    }
-  }
-  return popularity;
-}
+const getPopularity = userPopularity
 
 export {userBackToFront, userFrontToBack, getPopularity, maxQuotas}
 

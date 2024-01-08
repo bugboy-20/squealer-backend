@@ -1,12 +1,11 @@
 
 import { RequestHandler } from "express";
 
-import {SquealUser, SquealModel} from "../models/squealModel";
-import { User, UserModel } from "../models/userModel";
+import {SquealModel} from "../models/squealModel";
 
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
-import { RequestHandler } from "express";
+import { squealRead_t } from "../validators/squealValidators";
 
 const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
@@ -24,7 +23,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
           isAuth,
           authUsername
         });
-        if (response.receivers.length > 0) return res.json(response);
+        if (response) return res.json(response);
       }
 
       return res.status(404).end("Squeal doesn't exist");
@@ -71,7 +70,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
       await Promise.all(
         result.map((s) => squeal4NormalUser(s, { isAuth, authUsername }))
       )
-    ).filter((s) => s.receivers.length > 0);
+    ).filter((s): s is squealRead_t => s !== null);
     res.json(response);
   })
 
@@ -91,19 +90,22 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
       default: res.statusCode = 400; opType = {}; break
     }
 
-    SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec().then(async dbRes => {
-      if (dbRes)
-        res.json(await squeal4NormalUser(dbRes))
-      else {
-        res.status(404).end();
+    const dbRes = await SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec();
+    if (dbRes)
+    {
+      const out = await squeal4NormalUser(dbRes)
+      if(out){
+        res.json(out)
+        return;
       }
-    }).catch(e => {console.error('Errore' + JSON.stringify(e)); res.status(404).end()})
-
+    }
+    res.status(404).end();
 })
 
 const postSqueal : RequestHandler = catchServerError( async (req, res) => {
 
-    let inSqueal : SquealUser = stringifyGeoBody(req.body);
+    let inSqueal = stringifyGeoBody(req.body);
+
     const squeal = new SquealModel(inSqueal);
     /*const existingUser = await UserModel.findOne({ username: user.username }).exec();
 
@@ -113,12 +115,19 @@ const postSqueal : RequestHandler = catchServerError( async (req, res) => {
     }*/
 
     //res.sendStatus(202) 
+
     try {
       const savedSqueal = await squeal.save();
-      res.status(201).json(await squeal4NormalUser(savedSqueal));
+      const out = await squeal4NormalUser(savedSqueal)
+      if(!out){
+        res.sendStatus(404)
+      }
+      res.status(201).json(out);    
     } catch (e) {
       res.status(400).json({message : e})
     }
+
+
 
   },400,'postSqueal error: ')
 
@@ -145,7 +154,12 @@ const addReceiver: RequestHandler = catchServerError(async (req, res) => {
   }
   squeal.receivers.push(receiver);
   await squeal.save();
-  res.json(squeal4NormalUser(squeal));
+
+  const out = await squeal4NormalUser(squeal);
+  if(!out){
+    res.sendStatus(404)
+  }
+  res.json(out);
 })
 
 const changeReactions: RequestHandler = catchServerError(async (req, res) => {
@@ -169,7 +183,11 @@ const changeReactions: RequestHandler = catchServerError(async (req, res) => {
   squeal.negative_reaction = mutateReactions(squeal.negative_reaction, negative, req.auth.username);
   await squeal.save()
 
-  res.json(squeal4NormalUser(squeal));
+  const out = await squeal4NormalUser(squeal);
+  if(!out){
+    res.sendStatus(404)
+  }
+  res.json(out);
 })
 
 export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions};
