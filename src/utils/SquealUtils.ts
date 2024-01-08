@@ -183,7 +183,7 @@ async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author
 
   if (body.type == 'text')
     quotaUsed = body.content.length
-  else if (body.type == 'media')
+  else
     quotaUsed = 125
 
   console.log(`è stata usata ${quotaUsed}, b type ${body}`)
