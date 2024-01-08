@@ -1,12 +1,8 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
-import { UserModel } from './userModel';
-
-import { squealReadSchema } from '../validators/squealValidators';
 
 import { consumeQuota } from '../utils/SquealUtils';
+import { isPublic } from '../utils/SquealUtils';
 
-import { ChannelModel } from './channelModel';
-import {getCommentsForASqueal} from '../utils/commentUtils';
 
 
 
@@ -87,34 +83,9 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
     type: [String],
     default: [],
     required: true
+  }
 });
   
-squealSchema.pre('save', async function (next) {
-  // Impedisco di avere più di una reazione per utente
-  this.positive_reaction = [...new Set(this.positive_reaction)];
-  this.negative_reaction = [...new Set(this.negative_reaction)];
-
-  // Elimino eventuale doppio voto
-  this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
-
-  //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
-  const quota_used = this.body.content.length
-  UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
-
-  // update the category metadata
-  // if the squeal as at least one public receiver, then it is public, otherwise it is private
-
-  const channelsName = this.receivers.filter(r => r.startsWith('§'))
-
-  const channels = await Promise.all(channelsName.map(c => ChannelModel.findOne({name: c})));
-  const isPublic = channels.some(c => c?.type === 'public');
-
-  if (isPublic) this.category = ['public']
-  else this.category = ['private'];
-
-  await consumeQuota(this.body, isPublic, this.author)
-  next();
-
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
 
@@ -132,8 +103,6 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
 
-
-
 squealSchema.pre('save', async function (next) {
   // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
@@ -142,10 +111,11 @@ squealSchema.pre('save', async function (next) {
   // Elimino eventuale doppio voto
   this.negative_reaction = this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
 
-  //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
-  const quota_used = this.body.content.length
-  UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
+  let visibility = await isPublic(this.receivers)
 
+  console.log({v: visibility, rec: this.receivers})
+
+  await consumeQuota(this.body, visibility, this.author)
   next();
 });
 

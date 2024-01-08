@@ -1,7 +1,7 @@
-import { SquealSMM , SquealUser, ContentEnum} from '../models/squealModel'
-import {User, UserModel} from '../models/userModel';
-import { getCommentsForASqueal} from '../utils/commentUtils'
-import { squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
+import { SquealSMM , ContentEnum} from '../models/squealModel'
+import {UserModel} from '../models/userModel';
+import {getCommentsForASqueal} from '../utils/commentUtils'
+import {squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
 import {userRead_t} from '../validators/userValidators';
 import {userBackToFront} from './userUtils';
 import {ChannelModel } from '../models/channelModel';
@@ -13,6 +13,13 @@ import {
   isSquealUnpopular,
 } from './popularityUtils';
 
+const isPublic = async (receivers: string[]) => {
+  const channelsName = receivers.filter((r) => r.startsWith('§'));
+  const channels = await Promise.all(
+    channelsName.map((c) => ChannelModel.findOne({ name: c }))
+  );
+  return channels.some((c) => c?.type === 'public');
+}
 
 async function squeal4NormalUser(
   squealSMM: SquealSMM,
@@ -30,12 +37,8 @@ async function squeal4NormalUser(
       )
     : squealSMM.receivers;
 
-  const channelsName = newReceivers.filter((r) => r.startsWith('§'));
-  const channels = await Promise.all(
-    channelsName.map((c) => ChannelModel.findOne({ name: c }))
-  );
-  const isPublic = channels.some((c) => c?.type === 'public');
-  const newCategory = isPublic ? ['public'] : ['private'];
+  const visibility = await isPublic(newReceivers)
+  const newCategory = visibility ? ['public'] : ['private'];
   if (await isSquealControversial(squealSMM.id))
     newCategory.push('controversial');
   else if (await isSquealPopular(squealSMM.id)) newCategory.push('popular');
@@ -199,4 +202,4 @@ async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author
 
 }
 
-export { squeal4NormalUser, stringifyGeoBody, mutateReactions, consumeQuota };
+export { squeal4NormalUser, stringifyGeoBody, mutateReactions, consumeQuota, isPublic };
