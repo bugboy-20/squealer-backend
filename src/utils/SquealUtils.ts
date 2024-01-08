@@ -1,8 +1,9 @@
 import { ChannelModel } from '../models/channelModel';
-import { SquealSMM, SquealUser, ContentEnum } from '../models/squealModel';
+import { ContentEnum, SquealSMM } from '../models/squealModel';
 import { UserModel } from '../models/userModel';
 import { getCommentsForASqueal } from '../utils/commentUtils';
-import { squealReadSchema, squealRead_t } from '../validators/squealValidators';
+import { commentWrite_t } from '../validators/commentValidators';
+import { squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
 import {
   isSquealControversial,
   isSquealPopular,
@@ -59,11 +60,19 @@ async function squeal4NormalUser(
   return result.data;
 }
 
-function stringifyGeoBody(squeal: SquealUser): SquealUser {
-  if (squeal.body.type === 'geo') {
-    squeal.body.content = JSON.stringify(squeal.body.content);
+function stringifyGeoBody(
+  input: Pick<squealWrite_t, 'body'> | Pick<commentWrite_t, 'body'>
+): unknown {
+  if (input.body.type === 'geo') {
+    return {
+      ...input,
+      body: {
+        ...input.body,
+        content: JSON.stringify(input.body.content),
+      },
+    };
   }
-  return squeal;
+  return input;
 }
 
 function mutateReactions(
@@ -163,3 +172,4 @@ async function filterReceivers(
 }
 
 export { mutateReactions, squeal4NormalUser, stringifyGeoBody };
+

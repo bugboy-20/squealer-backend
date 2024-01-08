@@ -1,11 +1,11 @@
 import {Middleware} from "polka";
-import { Comment, CommentModel } from "../models/squealModel"
+import { CommentModel } from "../models/squealModel"
 import {catchServerError} from "../utils/controllersUtils";
-import {send401} from "../utils/statusSenders";
 import { comment4NormalUser } from "../utils/commentUtils";
+import { stringifyGeoBody } from "../utils/SquealUtils";
 
 const postComment : Middleware = catchServerError( async (req, res) => {
-    let comment = new CommentModel(req.body)
+    let comment = new CommentModel(stringifyGeoBody(req.body))
 
     comment.reference = req.params.referenceID
 
