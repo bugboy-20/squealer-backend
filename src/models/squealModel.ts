@@ -86,6 +86,22 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   }
 });
   
+
+squealSchema.pre('save', async function (next) {
+  // Impedisco di avere più di una reazione per utente
+  this.positive_reaction = [...new Set(this.positive_reaction)];
+  this.negative_reaction = [...new Set(this.negative_reaction)];
+
+  // Elimino eventuale doppio voto
+  this.negative_reaction = this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
+
+  let visibility = await isPublic(this.receivers)
+
+
+  await consumeQuota(this.body, visibility, this.author)
+  next();
+});
+
 const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
 
 
@@ -102,21 +118,4 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
 }).add(squealSchema).remove(['receivers','impressions','positive_reaction','negative_reaction'])
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
-
-squealSchema.pre('save', async function (next) {
-  // Impedisco di avere più di una reazione per utente
-  this.positive_reaction = [...new Set(this.positive_reaction)];
-  this.negative_reaction = [...new Set(this.negative_reaction)];
-
-  // Elimino eventuale doppio voto
-  this.negative_reaction = this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
-
-  let visibility = await isPublic(this.receivers)
-
-  console.log({v: visibility, rec: this.receivers})
-
-  await consumeQuota(this.body, visibility, this.author)
-  next();
-});
-
 export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };

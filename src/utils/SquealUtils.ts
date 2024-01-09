@@ -189,16 +189,14 @@ async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author
   else
     quotaUsed = 125
 
-  console.log(`è stata usata ${quotaUsed}, b type ${body}`)
   let user : userRead_t = await UserModel.findOne({username: author}).exec().then(u => {if(!u) throw Error('?? consumeQuota'); else return userBackToFront(u)}) //, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
   if (
-    user.quota.actualD + quotaUsed > user.quota.maxD &&
-    user.quota.actualW + quotaUsed > user.quota.maxW &&
+    user.quota.actualD + quotaUsed > user.quota.maxD ||
+    user.quota.actualW + quotaUsed > user.quota.maxW ||
     user.quota.actualM + quotaUsed > user.quota.maxM
-  ) {
-    await UserModel.updateOne({username: author}, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
-  } else
-    throw Error('quota exceeded')
+  ) throw Error('quota exceeded')
+
+  await UserModel.updateOne({username: author}, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
 
 }
 
