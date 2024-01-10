@@ -123,6 +123,7 @@ commentSchema.pre('save', async function(next) {
 
   let visibility = await getReceivers(this.reference).then(r => isPublic(r))
   await consumeQuota(this.body,visibility,this.author)
+next();
 })
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
