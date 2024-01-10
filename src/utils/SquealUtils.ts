@@ -1,14 +1,25 @@
-import { ChannelModel } from '../models/channelModel';
-import { ContentEnum, SquealSMM } from '../models/squealModel';
-import { UserModel } from '../models/userModel';
-import { getCommentsForASqueal } from '../utils/commentUtils';
+import { SquealSMM , ContentEnum} from '../models/squealModel'
+import {UserModel} from '../models/userModel';
+import {getCommentsForASqueal} from '../utils/commentUtils'
+import {squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
+import {userRead_t} from '../validators/userValidators';
+import {userBackToFront} from './userUtils';
+import {ChannelModel } from '../models/channelModel';
+
 import { commentWrite_t } from '../validators/commentValidators';
-import { squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
 import {
   isSquealControversial,
   isSquealPopular,
   isSquealUnpopular,
 } from './popularityUtils';
+
+const isPublic = async (receivers: string[]) => {
+  const channelsName = receivers.filter((r) => r.startsWith('§'));
+  const channels = await Promise.all(
+    channelsName.map((c) => ChannelModel.findOne({ name: c }))
+  );
+  return channels.some((c) => c?.type === 'public');
+}
 
 async function squeal4NormalUser(
   squealSMM: SquealSMM,
@@ -26,12 +37,8 @@ async function squeal4NormalUser(
       )
     : squealSMM.receivers;
 
-  const channelsName = newReceivers.filter((r) => r.startsWith('§'));
-  const channels = await Promise.all(
-    channelsName.map((c) => ChannelModel.findOne({ name: c }))
-  );
-  const isPublic = channels.some((c) => c?.type === 'public');
-  const newCategory = isPublic ? ['public'] : ['private'];
+  const visibility = await isPublic(newReceivers)
+  const newCategory = visibility ? ['public'] : ['private'];
   if (await isSquealControversial(squealSMM.id))
     newCategory.push('controversial');
   else if (await isSquealPopular(squealSMM.id)) newCategory.push('popular');
@@ -48,6 +55,7 @@ async function squeal4NormalUser(
           ? JSON.parse(squealSMM.body.content)
           : squealSMM.body.content,
     },
+
     datetime: squealSMM.datetime,
     impressions: squealSMM.impressions.length,
     positive_reaction: squealSMM.positive_reaction.length,
@@ -171,5 +179,25 @@ async function filterReceivers(
   );
 }
 
-export { mutateReactions, squeal4NormalUser, stringifyGeoBody };
+async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author : SquealSMM["author"]) {
+  let quotaUsed = 0;
+  if (!isPublic)
+    return
 
+  if (body.type == 'text')
+    quotaUsed = body.content.length
+  else
+    quotaUsed = 125
+
+  let user : userRead_t = await UserModel.findOne({username: author}).exec().then(u => {if(!u) throw Error('?? consumeQuota'); else return userBackToFront(u)}) //, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
+  if (
+    user.quota.actualD + quotaUsed > user.quota.maxD ||
+    user.quota.actualW + quotaUsed > user.quota.maxW ||
+    user.quota.actualM + quotaUsed > user.quota.maxM
+  ) throw Error('quota exceeded')
+
+  await UserModel.updateOne({username: author}, { $inc: { "quote.day" : quotaUsed, "quote.month" : quotaUsed, "quote.week" : quotaUsed }}) 
+
+}
+
+export { squeal4NormalUser, stringifyGeoBody, mutateReactions, consumeQuota, isPublic };

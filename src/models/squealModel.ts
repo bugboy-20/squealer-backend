@@ -1,5 +1,11 @@
+// ATTENZIONE L'ORDINE DELLE DICHIARAZIONI È IMPORTANTE!!!
 import mongoose, { Schema, Document, now } from 'mongoose';
-import { UserModel } from './userModel';
+import {getReceivers} from '../utils/commentUtils';
+
+import { consumeQuota } from '../utils/SquealUtils';
+import { isPublic } from '../utils/SquealUtils';
+
+
 
 
 const ContentEnum = {
@@ -83,9 +89,6 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 });
 
 
-const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
-
-
 interface Comment extends Omit<SquealSMM, 'receivers'|'impressions'|'positive_reaction'|'negative_reaction'> {
   reference: string,
   comments: Comment[]
@@ -98,9 +101,6 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
   }
 }).add(squealSchema).remove(['receivers','impressions','positive_reaction','negative_reaction'])
 
-const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
-
-
 
 squealSchema.pre('save', async function (next) {
   // Impedisco di avere più di una reazione per utente
@@ -110,11 +110,21 @@ squealSchema.pre('save', async function (next) {
   // Elimino eventuale doppio voto
   this.negative_reaction = this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
 
-  //tolgo la quota all'utente TODO impedire il salvataggio quando ha esaurito la quota
-  const quota_used = this.body.content.length
-  UserModel.updateOne({ id: this.author }, { $inc: {"quote.day": quota_used, "quote.week": quota_used,"quote.month": quota_used,}})
+  let visibility = await isPublic(this.receivers)
 
+
+  await consumeQuota(this.body, visibility, this.author)
   next();
 });
 
+const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
+
+commentSchema.pre('save', async function(next) {
+
+  let visibility = await getReceivers(this.reference).then(r => isPublic(r))
+  await consumeQuota(this.body,visibility,this.author)
+next();
+})
+
+const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
 export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };
