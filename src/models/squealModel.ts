@@ -103,6 +103,7 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
 
 
 squealSchema.pre('save', async function (next) {
+  this.impressions = [...new Set(this.impressions)];
   // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
   this.negative_reaction = [...new Set(this.negative_reaction)];

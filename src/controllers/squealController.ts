@@ -78,28 +78,28 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
 
 
   let squealID = req.params.id;
-  let opType = req.body.op;
+  const dbRes = await SquealModel.findOne({_id: squealID}).exec();
+  if(!dbRes){
+    res.sendStatus(404);
+    return;
+  }
   
     switch (req.body.op) {
       case "viewed":
-        opType = { $push: {"impressions":req.auth.username}}; break
+        dbRes.impressions.push(req.auth.username); break
       case "upvote":
-        opType = { $push: {"positive_reaction":req.auth.username}}; break
+        dbRes.positive_reaction.push(req.auth.username); break
       case "downvote":
-        opType = { $push: {"negative_reaction":req.auth.username}}; break
-      default: res.statusCode = 400; opType = {}; break
+        dbRes.negative_reaction.push(req.auth.username); break
     }
 
-    const dbRes = await SquealModel.findOneAndUpdate({_id: squealID}, opType, { new: true}).exec();
-    if (dbRes)
-    {
-      const out = await squeal4NormalUser(dbRes)
-      if(out){
-        res.json(out)
-        return;
-      }
-    }
-    res.status(404).end();
+    dbRes.save();
+
+    const out = await squeal4NormalUser(dbRes, {isAuth: req.auth.isAuth, authUsername: req.auth.username});
+    if(out)
+      res.json(out);
+    else
+      res.sendStatus(404);
 })
 
 const postSqueal : RequestHandler = catchServerError( async (req, res) => {

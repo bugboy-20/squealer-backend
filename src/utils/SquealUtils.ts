@@ -60,11 +60,12 @@ async function squeal4NormalUser(
     impressions: squealSMM.impressions.length,
     positive_reaction: squealSMM.positive_reaction.length,
     negative_reaction: squealSMM.negative_reaction.length,
+    reacted: !!(filter?.isAuth && (squealSMM.positive_reaction.includes(filter.authUsername) || squealSMM.negative_reaction.includes(filter.authUsername))),
     category: newCategory,
     comments: await getCommentsForASqueal(squealSMM._id.toString()),
   };
   const result = squealReadSchema.safeParse(ret);
-  if (!result.success) return null;
+  if (!result.success) { console.log(result.error); return null };
   return result.data;
 }
 
