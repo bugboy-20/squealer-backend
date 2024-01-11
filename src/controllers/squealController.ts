@@ -6,13 +6,17 @@ import {SquealModel} from "../models/squealModel";
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
 import { squealRead_t } from "../validators/squealValidators";
+import { findVisibleChannels } from "../utils/channelUtils";
 
 const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     const isAuth = req.auth.isAuth;
     const authUsername = req.auth.username;
 
-    const squeals = SquealModel.find();
+    const { visibleChannels } = await findVisibleChannels(isAuth, authUsername)
+    console.log("visibleChannels", visibleChannels)
+
+    const squeals = SquealModel.find({ receivers: { $in: visibleChannels } });
 
 
     if (req.params.id) {

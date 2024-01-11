@@ -34,6 +34,16 @@ async function addSubcribedInfo(ch : Channel | Channel[], username : string) : P
 
 }
 
+async function findVisibleChannels(isAuth: boolean, username: string) {
+  const officialRegex = /^§[A-Z]+.*$/;
+
+  const subscribedChannels = ( await UserModel.findOne({ username }))?.subscriptions ?? []
+  const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
+  const officialChannels = publicChannels.filter( channel =>  officialRegex.test(channel) )
+  const visibleChannels = isAuth ? subscribedChannels.concat(publicChannels) : officialChannels
+  return {visibleChannels, subscribedChannels}
+}
 
 
-export {addSubcribedInfo}
+
+export {addSubcribedInfo, findVisibleChannels}
