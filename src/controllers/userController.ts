@@ -5,6 +5,7 @@ import {User,UserModel} from '../models/userModel'
 import {getPopularity, userBackToFront, userFrontToBack} from '../utils/userUtils';
 import { catchServerError } from '../utils/controllersUtils';
 import { hashPassword, signJwt, verifyJwt } from '../utils/authorisation';
+import {send401} from '../utils/statusSenders';
 
 const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
   const username = req.query.username;
@@ -264,7 +265,9 @@ const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) 
   res.json(userBackToFront(user))
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword};
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword, };
+
 
 
 

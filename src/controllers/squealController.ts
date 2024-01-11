@@ -190,4 +190,16 @@ const changeReactions: RequestHandler = catchServerError(async (req, res) => {
   res.json(out);
 })
 
-export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions};
+const getNotifications : RequestHandler = catchServerError ( async (req,res) => {
+  const user = req.auth.username
+  
+  let squeals = await SquealModel.find({$and:[
+    { receivers: { $in: [user] }},
+    { impressions: { $nin : [user] }}
+  ]})
+
+  res.json(await Promise.all(squeals.map(s => squeal4NormalUser(s))))
+
+})
+
+export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions, getNotifications};
