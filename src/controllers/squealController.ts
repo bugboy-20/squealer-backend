@@ -107,6 +107,7 @@ const postSqueal : RequestHandler = catchServerError( async (req, res) => {
     let inSqueal = stringifyGeoBody(req.body);
 
     const squeal = new SquealModel(inSqueal);
+    squeal.author = req.auth.username;
     /*const existingUser = await UserModel.findOne({ username: user.username }).exec();
 
     if (existingUser) {
