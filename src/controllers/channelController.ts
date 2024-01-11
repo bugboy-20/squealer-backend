@@ -1,8 +1,7 @@
 
 import {RequestHandler} from 'express';
 import {Channel, ChannelModel} from '../models/channelModel';
-import { User, UserModel } from '../models/userModel';
-import {addSubcribedInfo} from '../utils/channelUtils';
+import {addSubcribedInfo, findVisibleChannels} from '../utils/channelUtils';
 import {catchServerError} from '../utils/controllersUtils';
 import { channelSchema } from '../validators/channelValidator';
 
@@ -28,10 +27,8 @@ const addChannel : RequestHandler = catchServerError(
 const getChannels : RequestHandler = catchServerError(async (req, res) => {
   const officialRegex = /^§[A-Z]+.*$/
   const nonOfficialRegex = /^§[a-z]+.*$/
+  const { subscribedChannels, visibleChannels } = await findVisibleChannels(req.auth.isAuth, req.auth.username)
 
-  const subscribedChannels = ( await UserModel.findOne({ username : req.auth.username }))?.subscriptions ?? []
-  const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
-  const visibleChannels = subscribedChannels.concat(publicChannels)
 
   const channels = ChannelModel.find({name : {$in: visibleChannels }})
 
@@ -64,11 +61,6 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
         name: {$regex: nonOfficialRegex}
       })
   }
-  else 
-    channels.find({
-      name: {$regex: officialRegex}
-    });
-  
 
   const result : Channel | Channel[] | null = await channels.exec()
   if(!result){
