@@ -29,7 +29,7 @@ const generateIMAGE = (n: number) => {
           type: 'media',
           content: `https://picsum.photos/seed/${newId}/200/300`,
         },
-        receivers: ['§IMAGE_100'],
+        receivers: [`§IMAGE_${n}`],
       };
     });
   };
