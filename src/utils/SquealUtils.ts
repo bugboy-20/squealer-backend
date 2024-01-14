@@ -1,7 +1,7 @@
 import { SquealSMM , ContentEnum} from '../models/squealModel'
 import {UserModel} from '../models/userModel';
 import {getCommentsForASqueal} from '../utils/commentUtils'
-import {squealReadSchema, squealRead_t, squealWrite_t } from '../validators/squealValidators';
+import {looseSquealRead_t, squealReadSchema, squealWrite_t } from '../validators/squealValidators';
 import {userRead_t} from '../validators/userValidators';
 import {userBackToFront} from './userUtils';
 import {ChannelModel } from '../models/channelModel';
@@ -27,7 +27,7 @@ async function squeal4NormalUser(
     isAuth: boolean;
     authUsername: string;
   }
-): Promise<squealRead_t | null> {
+): Promise<looseSquealRead_t | null> {
   const newReceivers = filter
     ? await filterReceivers(
         filter.isAuth,

@@ -2,8 +2,7 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import {getReceivers} from '../utils/commentUtils';
 
-import { consumeQuota } from '../utils/SquealUtils';
-import { isPublic } from '../utils/SquealUtils';
+import { consumeQuota, isPublic } from '../utils/SquealUtils';
 
 
 
@@ -28,23 +27,6 @@ interface SquealSMM extends Document {
   positive_reaction: string[],
   negative_reaction: string[],
 }
-
-interface SquealUser {
-  id : string,
-  receivers: string[],
-  author: string,
-  body: {
-    type: ContentType,
-    content: string | object //TODO vede se esiste tipo più specifico
-  },
-  datetime: Date,
-  impressions: number,
-  positive_reaction: number,
-  negative_reaction: number,
-  category: string[],
-  comments: Comment[]
-}
-
 
 const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
   author: {
@@ -128,4 +110,4 @@ next();
 })
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
-export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };
+export { SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };

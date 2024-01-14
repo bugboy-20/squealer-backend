@@ -1,4 +1,5 @@
-import { SquealModel, SquealUser } from '../models/squealModel'
+import { SquealModel } from '../models/squealModel'
+import { looseSquealRead_t } from '../validators/squealValidators';
 import {squeal4NormalUser} from './SquealUtils';
 /*
 function isUserPopular(username : string) : boolean {
@@ -6,7 +7,7 @@ function isUserPopular(username : string) : boolean {
   return false
 }*/
 
-async function isSquealPopular(squeal : string | SquealUser) : Promise<boolean> {
+async function isSquealPopular(squeal : string | looseSquealRead_t) : Promise<boolean> {
   if ( typeof squeal === 'string')
     return isSquealPopularByID(squeal)
   else
@@ -19,17 +20,21 @@ async function isSquealPopularByID(id :string) : Promise<boolean> {
   if(!squeal)
     return false
 
-  return isSquealPopularByObject(await squeal4NormalUser(squeal))
+  const parsedSqueal = await squeal4NormalUser(squeal)
+  if(!parsedSqueal)
+    return false
+
+  return isSquealPopularByObject(parsedSqueal)
 
 }
 
-function isSquealPopularByObject(squeal : SquealUser) : boolean {
+function isSquealPopularByObject(squeal : looseSquealRead_t) : boolean {
     //TODO: abstract the critical mass away from this function
     const CM = squeal.impressions * 0.25
     return (squeal.positive_reaction > CM) 
 }
 
-async function isSquealUnpopular(squeal : string | SquealUser) : Promise<boolean> {
+async function isSquealUnpopular(squeal : string | looseSquealRead_t) : Promise<boolean> {
   if ( typeof squeal === 'string')
     return isSquealUnpopularByID(squeal)
   else
@@ -42,17 +47,20 @@ async function isSquealUnpopularByID(id :string) : Promise<boolean> {
   if(!squeal)
     return false
 
-  return isSquealUnpopularByObject(await squeal4NormalUser(squeal))
-
+  const parsedSqueal = await squeal4NormalUser(squeal)
+  if(!parsedSqueal)
+    return false
+  
+  return isSquealUnpopularByObject(parsedSqueal)
 }
 
-function isSquealUnpopularByObject(squeal : SquealUser) : boolean {
+function isSquealUnpopularByObject(squeal : looseSquealRead_t) : boolean {
     //TODO: abstract the critical mass away from this function
     const CM = squeal.impressions * 0.25
     return (squeal.negative_reaction > CM) 
 }
 
-async function isSquealControversial(squeal: string | SquealUser): Promise<boolean> {
+async function isSquealControversial(squeal: string | looseSquealRead_t): Promise<boolean> {
   return (await isSquealPopular(squeal) && await isSquealUnpopular(squeal))
 }
 
@@ -60,7 +68,7 @@ async function isSquealControversial(squeal: string | SquealUser): Promise<boole
 const userPopularity = async (username: string) => {
   // si calcola prendendo il numero di post popolari (Reazioni positive > Critical Mass) che l'utente ha fatto
 
-  const squeals : SquealUser[] = await Promise.all(await SquealModel.find({author: username}).exec().then(ss => ss.map(s => squeal4NormalUser(s))))
+  const squeals : looseSquealRead_t[]  = (await Promise.all(await SquealModel.find({author: username}).exec().then(ss => ss.map(s => squeal4NormalUser(s))))).filter((s): s is looseSquealRead_t => s !== null)
   
   let popularity : number = 100
 
