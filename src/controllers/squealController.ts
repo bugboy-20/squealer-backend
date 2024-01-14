@@ -7,6 +7,7 @@ import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
 import { squealRead_t } from "../validators/squealValidators";
 import { findVisibleChannels } from "../utils/channelUtils";
+import { automaticChannelsList } from "../utils/automaticChannels";
 
 const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
@@ -14,10 +15,9 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     const authUsername = req.auth.username;
 
     const { visibleChannels } = await findVisibleChannels(isAuth, authUsername)
-    console.log("visibleChannels", visibleChannels)
 
     const squeals = SquealModel.find({ receivers: { $in: visibleChannels } });
-
+    let automaticSqueals: squealRead_t[] = [];
 
     if (req.params.id) {
       //TODO valutare di sportre
@@ -33,8 +33,12 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
       return res.status(404).end("Squeal doesn't exist");
 
     }
-    if ( req.params.channelName)
-      squeals.find({ receivers: req.params.channelName});
+    if ( req.params.channelName || (req.query.channel && typeof req.query.channel === "string") )
+    {
+      const channelName = req.params.channelName ?? req.query.channel;
+      squeals.find({ receivers: channelName});
+      automaticSqueals = await automaticChannelsList[channelName]?.() ?? [];
+    }
     if (req.query.author) {
       squeals.find({ author: { $regex: req.query.author, $options: "i" } });
     }
@@ -45,15 +49,14 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
       let date = new Date(req.query.date as string)
       squeals.find({ datetime: { $gte: date } })
     }
-    if ( req.query.channel)
-      squeals.find({ receivers:  req.query.channel})
-    //TODO cathegory
-
     if ( req.query.page  && typeof req.query.page === "string") {
       let pNum = parseInt(req.query.page);
       squeals
         .skip(pNum*10) //TODO generalizzare
         .limit(10)
+      
+      // implement pagination with external data
+      automaticSqueals = automaticSqueals.slice(pNum*10, pNum*10+10)
     }
     if ( req.query.query && typeof req.query.query === "string") {
       if(req.query.query.startsWith('@'))
@@ -69,13 +72,12 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     squeals.sort("-datetime")
 
-    const result = await squeals.exec();
-    const response = (
+    const result = (
       await Promise.all(
-        result.map((s) => squeal4NormalUser(s, { isAuth, authUsername }))
+        (await squeals.exec()).map((s) => squeal4NormalUser(s, { isAuth, authUsername }))
       )
     ).filter((s): s is squealRead_t => s !== null);
-    res.json(response);
+    res.json(automaticSqueals.concat(result));
   })
 
 const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO gestire con autenticazione
