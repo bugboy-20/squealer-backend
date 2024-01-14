@@ -13,6 +13,7 @@ const baseSqueal: squealRead_t = {
   receivers: ['#temp'],
   comments: [],
   category: ['public', 'automatic'],
+  reacted: true,
   impressions: 0,
   negative_reaction: 0,
   positive_reaction: 0,
@@ -30,6 +31,7 @@ const generateIMAGE = (n: number) => {
           content: `https://picsum.photos/seed/${newId}/200/300`,
         },
         receivers: [`§IMAGE_${n}`],
+        author: '@picsum',
       };
     });
   };
@@ -50,11 +52,13 @@ const generateNEWS = (feedUrl: string) => {
       return {
         ...baseSqueal,
         id: new mongoose.Types.ObjectId().toString(),
+        datetime: new Date(item.pubDate),
         body: {
           type: 'text',
           content: item.contentSnippet,
         },
         receivers: ['§NEWS'],
+        author: '@corrieredellasera',
       };
     });
   };
