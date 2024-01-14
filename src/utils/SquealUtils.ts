@@ -1,4 +1,4 @@
-import { SquealSMM , ContentEnum} from '../models/squealModel'
+import {Squeal, ContentEnum} from '../models/squealModel'
 import {UserModel} from '../models/userModel';
 import {getCommentsForASqueal} from '../utils/commentUtils'
 import {looseSquealRead_t, squealReadSchema, squealWrite_t } from '../validators/squealValidators';
@@ -22,7 +22,7 @@ const isPublic = async (receivers: string[]) => {
 }
 
 async function squeal4NormalUser(
-  squealSMM: SquealSMM,
+  squeal: Squeal,
   filter?: {
     isAuth: boolean;
     authUsername: string;
@@ -32,37 +32,37 @@ async function squeal4NormalUser(
     ? await filterReceivers(
         filter.isAuth,
         filter.authUsername,
-        squealSMM.author,
-        squealSMM.receivers
+        squeal.author,
+        squeal.receivers
       )
-    : squealSMM.receivers;
+    : squeal.receivers;
 
   const visibility = await isPublic(newReceivers)
   const newCategory = visibility ? ['public'] : ['private'];
-  if (await isSquealControversial(squealSMM.id))
+  if (await isSquealControversial(squeal.id))
     newCategory.push('controversial');
-  else if (await isSquealPopular(squealSMM.id)) newCategory.push('popular');
-  else if (await isSquealUnpopular(squealSMM.id)) newCategory.push('unpopular');
+  else if (await isSquealPopular(squeal.id)) newCategory.push('popular');
+  else if (await isSquealUnpopular(squeal.id)) newCategory.push('unpopular');
 
   const ret = {
-    id: squealSMM._id.toString(),
+    id: squeal._id.toString(),
     receivers: newReceivers,
-    author: squealSMM.author,
+    author: squeal.author,
     body: {
-      type: squealSMM.body.type,
+      type: squeal.body.type,
       content:
-        squealSMM.body.type === ContentEnum.Geo
-          ? JSON.parse(squealSMM.body.content)
-          : squealSMM.body.content,
+        squeal.body.type === ContentEnum.Geo
+          ? JSON.parse(squeal.body.content)
+          : squeal.body.content,
     },
 
-    datetime: squealSMM.datetime,
-    impressions: squealSMM.impressions.length,
-    positive_reaction: squealSMM.positive_reaction.length,
-    negative_reaction: squealSMM.negative_reaction.length,
-    reacted: !!(filter?.isAuth && (squealSMM.positive_reaction.includes(filter.authUsername) || squealSMM.negative_reaction.includes(filter.authUsername))),
+    datetime: squeal.datetime,
+    impressions: squeal.impressions.length,
+    positive_reaction: squeal.positive_reaction.length,
+    negative_reaction: squeal.negative_reaction.length,
+    reacted: !!(filter?.isAuth && (squeal.positive_reaction.includes(filter.authUsername) || squeal.negative_reaction.includes(filter.authUsername))),
     category: newCategory,
-    comments: await getCommentsForASqueal(squealSMM._id.toString()),
+    comments: await getCommentsForASqueal(squeal._id.toString()),
   };
   const result = squealReadSchema.safeParse(ret);
   if (!result.success) { console.log(result.error); return null };
@@ -180,7 +180,7 @@ async function filterReceivers(
   );
 }
 
-async function consumeQuota(body : SquealSMM["body"], isPublic : boolean, author : SquealSMM["author"]) {
+async function consumeQuota(body : Squeal["body"], isPublic : boolean, author : Squeal["author"]) {
   let quotaUsed = 0;
   if (!isPublic)
     return
