@@ -40,7 +40,7 @@ async function findVisibleChannels(isAuth: boolean, username: string) {
   const subscribedChannels = ( await UserModel.findOne({ username }))?.subscriptions ?? []
   const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
   const officialChannels = publicChannels.filter( channel =>  officialRegex.test(channel) )
-  const visibleChannels = isAuth ? subscribedChannels.concat(publicChannels) : officialChannels
+  const visibleChannels = Array.from(new Set<string>(isAuth ? subscribedChannels.concat(publicChannels) : officialChannels));
   return {visibleChannels, subscribedChannels}
 }
 

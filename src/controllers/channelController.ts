@@ -4,6 +4,8 @@ import {Channel, ChannelModel} from '../models/channelModel';
 import {addSubcribedInfo, findVisibleChannels} from '../utils/channelUtils';
 import {catchServerError} from '../utils/controllersUtils';
 import { channelSchema } from '../validators/channelValidator';
+import { nonOfficialChannelRegex, officialChannelRegex } from '../validators/utils/regex';
+import { UserModel } from '../models/userModel';
 
 /* TODO
  * controlli sul tipo di canali che un utente può creare
@@ -25,8 +27,6 @@ const addChannel : RequestHandler = catchServerError(
   ,500)
 
 const getChannels : RequestHandler = catchServerError(async (req, res) => {
-  const officialRegex = /^§[A-Z]+.*$/
-  const nonOfficialRegex = /^§[a-z]+.*$/
   const { subscribedChannels, visibleChannels } = await findVisibleChannels(req.auth.isAuth, req.auth.username)
 
 
@@ -35,8 +35,22 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
   if( req.params.channelName ) {
     const channelName = req.params.channelName;
     // if not authenticated, only official channels are visible
-    if( !req?.auth.isAuth && officialRegex.test(channelName) )
+    if( !req?.auth.isAuth && officialChannelRegex.test(channelName) )
       channels.findOne({ name: channelName })
+    // if authenticated and channelName is a username, the user wants the direct channel
+    else if( req?.auth.isAuth && channelName.startsWith('@') ){
+      const user = await UserModel.findOne({ username: channelName })
+      if(!user){
+        res.sendStatus(404)
+        return;
+      }
+      res.json({
+        name: channelName,
+        type: "direct",
+        description: `Canale diretto con ${user.username}`,
+      });
+      return;
+    }
     // if authenticated, only subscribed and public channels are visible
     else if( req?.auth.isAuth )
       channels.findOne({ name: { $regex: channelName, $in: visibleChannels } })
@@ -54,11 +68,11 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
 
     if ( req.query.official === 'true' )
       channels.find({
-        name: {$regex: officialRegex}
+        name: {$regex: officialChannelRegex}
       })
     else if ( req.query.official === 'false' )
       channels.find({
-        name: {$regex: nonOfficialRegex}
+        name: {$regex: nonOfficialChannelRegex}
       })
   }
 
