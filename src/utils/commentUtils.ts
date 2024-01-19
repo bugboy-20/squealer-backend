@@ -1,4 +1,4 @@
-import {Comment, CommentModel, ContentEnum, SquealModel, SquealSMM} from '../models/squealModel'
+import {Comment, CommentModel, ContentEnum, SquealModel, Squeal} from '../models/squealModel'
 import { commentReadSchema, commentRead_t } from '../validators/commentValidators'
 
 async function recursiveComments(comment: commentRead_t) : Promise<commentRead_t> {
@@ -35,9 +35,9 @@ const comment4NormalUser = (comment: Comment): commentRead_t => {
 }
 
 async function getReceivers(reference: string) : Promise<string[]> {
-  let father : Comment | SquealSMM | null = await SquealModel.findOne({ _id: reference})
+  let father : Comment | Squeal | null = await SquealModel.findOne({ _id: reference})
   if (father)
-    return (father as SquealSMM).receivers
+    return (father as Squeal).receivers
 
   father= await CommentModel.findOne({ _id: reference})
   if (!father)

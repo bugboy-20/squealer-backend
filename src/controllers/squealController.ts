@@ -5,7 +5,7 @@ import {SquealModel} from "../models/squealModel";
 
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
-import { squealRead_t } from "../validators/squealValidators";
+import { looseSquealRead_t } from "../validators/squealValidators";
 import { findVisibleChannels } from "../utils/channelUtils";
 import { automaticChannelsList } from "../utils/automaticChannels";
 
@@ -17,7 +17,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     const { visibleChannels } = await findVisibleChannels(isAuth, authUsername)
 
     const squeals = SquealModel.find({ receivers: { $in: visibleChannels } });
-    let automaticSqueals: squealRead_t[] = [];
+    let automaticSqueals: looseSquealRead_t[] = [];
 
     if (req.params.id) {
       //TODO valutare di sportre
@@ -76,7 +76,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
       await Promise.all(
         (await squeals.exec()).map((s) => squeal4NormalUser(s, { isAuth, authUsername }))
       )
-    ).filter((s): s is squealRead_t => s !== null);
+    ).filter((s): s is looseSquealRead_t => s !== null);
     res.json(automaticSqueals.concat(result));
   })
 

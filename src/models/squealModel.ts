@@ -2,8 +2,7 @@
 import mongoose, { Schema, Document, now } from 'mongoose';
 import {getReceivers} from '../utils/commentUtils';
 
-import { consumeQuota } from '../utils/SquealUtils';
-import { isPublic } from '../utils/SquealUtils';
+import { consumeQuota, isPublic } from '../utils/SquealUtils';
 
 
 
@@ -16,7 +15,7 @@ const ContentEnum = {
 
 type ContentType = (typeof ContentEnum)[keyof typeof ContentEnum];
 
-interface SquealSMM extends Document {
+interface Squeal extends Document {
   receivers: string[],
   author: string,
   body: {
@@ -29,24 +28,7 @@ interface SquealSMM extends Document {
   negative_reaction: string[],
 }
 
-interface SquealUser {
-  id : string,
-  receivers: string[],
-  author: string,
-  body: {
-    type: ContentType,
-    content: string | object //TODO vede se esiste tipo più specifico
-  },
-  datetime: Date,
-  impressions: number,
-  positive_reaction: number,
-  negative_reaction: number,
-  category: string[],
-  comments: Comment[]
-}
-
-
-const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
+const squealSchema: Schema<Squeal> = new Schema<Squeal>({
   author: {
     type: String,
     required: true
@@ -89,7 +71,7 @@ const squealSchema: Schema<SquealSMM> = new Schema<SquealSMM>({
 });
 
 
-interface Comment extends Omit<SquealSMM, 'receivers'|'impressions'|'positive_reaction'|'negative_reaction'> {
+interface Comment extends Omit<Squeal, 'receivers'|'impressions'|'positive_reaction'|'negative_reaction'> {
   reference: string,
   comments: Comment[]
 }
@@ -118,7 +100,7 @@ squealSchema.pre('save', async function (next) {
   next();
 });
 
-const SquealModel = mongoose.model<SquealSMM>('Squeal', squealSchema);
+const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
 
 commentSchema.pre('save', async function(next) {
 
@@ -128,4 +110,4 @@ next();
 })
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
-export {SquealUser, SquealSMM,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };
+export { Squeal,SquealModel, squealSchema, Comment, CommentModel, ContentEnum };
