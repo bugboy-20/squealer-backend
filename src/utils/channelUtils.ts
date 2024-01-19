@@ -1,5 +1,6 @@
 import {Channel, ChannelModel} from "../models/channelModel";
 import { UserModel } from "../models/userModel";
+import { channel_t } from "../validators/channelValidator";
 
 function addSubInfo(ch : Channel, subs : string[]) : Channel {
   const newCh : any = {
@@ -44,6 +45,14 @@ async function findVisibleChannels(isAuth: boolean, username: string) {
   return {visibleChannels, subscribedChannels}
 }
 
+function userToChannel(username : string) : channel_t {
+  return {
+    // it's safe to cast here because we checked that username starts with @
+    name: username.startsWith('@') ? username as `@${string}`: `@${username}`,
+    description: `Canale diretto con ${username}`,
+    type: "direct",
+  }
+}
 
 
-export {addSubcribedInfo, findVisibleChannels}
+export {addSubcribedInfo, findVisibleChannels, userToChannel}

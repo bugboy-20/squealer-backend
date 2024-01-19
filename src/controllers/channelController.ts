@@ -1,11 +1,12 @@
 
 import {RequestHandler} from 'express';
 import {Channel, ChannelModel} from '../models/channelModel';
-import {addSubcribedInfo, findVisibleChannels} from '../utils/channelUtils';
+import {addSubcribedInfo, findVisibleChannels, userToChannel} from '../utils/channelUtils';
 import {catchServerError} from '../utils/controllersUtils';
 import { channelSchema } from '../validators/channelValidator';
 import { nonOfficialChannelRegex, officialChannelRegex } from '../validators/utils/regex';
 import { UserModel } from '../models/userModel';
+import { SquealModel } from '../models/squealModel';
 
 /* TODO
  * controlli sul tipo di canali che un utente può creare
@@ -44,11 +45,7 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
         res.sendStatus(404)
         return;
       }
-      res.json({
-        name: channelName,
-        type: "direct",
-        description: `Canale diretto con ${user.username}`,
-      });
+      res.json(userToChannel(channelName ));
       return;
     }
     // if authenticated, only subscribed and public channels are visible
@@ -62,6 +59,27 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
   else if(req?.auth.isAuth) {
     if ( req.query.subscribed === "true" )
       channels.find({ name : {$in: subscribedChannels }})
+
+    if ( req.query.type === "direct")
+    {
+      // come si fanno a trovare tutti gli utenti che mi hanno scritto uno squeal?
+      // se appaio tra i receiver di un qualche squeal, allora ho una chat diretta con l'autore
+      // inoltre tra i receivers devono esserci solo io e altri utenti (solo receivers che iniziano con @)
+      const directChannels = Array.from(
+        new Set<string>(
+          (
+            await SquealModel.find({
+              $and: [
+                { receivers: req.auth.username },
+                { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
+              ],
+            })
+          ).map((squeal) => squeal.author)
+        )
+      );
+      res.json(directChannels.map(userToChannel));
+      return;
+    }
 
     if ( req.query.type)
       channels.find({type : req.query.type})
