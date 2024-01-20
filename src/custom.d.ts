@@ -5,3 +5,9 @@ declare namespace Express {
       | { isAuth: true; username: string; usertype: string };
   }
 }
+
+declare module "mongoose" {
+  interface SaveOptions {
+    disableMiddleware?: boolean;
+  }
+}
