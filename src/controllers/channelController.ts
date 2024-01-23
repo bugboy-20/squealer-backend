@@ -1,9 +1,12 @@
 
 import {RequestHandler} from 'express';
 import {Channel, ChannelModel} from '../models/channelModel';
-import {addSubcribedInfo, findVisibleChannels} from '../utils/channelUtils';
+import {addSubcribedInfo, findVisibleChannels, userToChannel} from '../utils/channelUtils';
 import {catchServerError} from '../utils/controllersUtils';
 import { channelSchema } from '../validators/channelValidator';
+import { nonOfficialChannelRegex, officialChannelRegex } from '../validators/utils/regex';
+import { UserModel } from '../models/userModel';
+import { SquealModel } from '../models/squealModel';
 
 /* TODO
  * controlli sul tipo di canali che un utente può creare
@@ -25,8 +28,6 @@ const addChannel : RequestHandler = catchServerError(
   ,500)
 
 const getChannels : RequestHandler = catchServerError(async (req, res) => {
-  const officialRegex = /^§[A-Z]+.*$/
-  const nonOfficialRegex = /^§[a-z]+.*$/
   const { subscribedChannels, visibleChannels } = await findVisibleChannels(req.auth.isAuth, req.auth.username)
 
 
@@ -35,8 +36,18 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
   if( req.params.channelName ) {
     const channelName = req.params.channelName;
     // if not authenticated, only official channels are visible
-    if( !req?.auth.isAuth && officialRegex.test(channelName) )
+    if( !req?.auth.isAuth && officialChannelRegex.test(channelName) )
       channels.findOne({ name: channelName })
+    // if authenticated and channelName is a username, the user wants the direct channel
+    else if( req?.auth.isAuth && channelName.startsWith('@') ){
+      const user = await UserModel.findOne({ username: channelName })
+      if(!user){
+        res.sendStatus(404)
+        return;
+      }
+      res.json(userToChannel(channelName ));
+      return;
+    }
     // if authenticated, only subscribed and public channels are visible
     else if( req?.auth.isAuth )
       channels.findOne({ name: { $regex: channelName, $in: visibleChannels } })
@@ -49,16 +60,37 @@ const getChannels : RequestHandler = catchServerError(async (req, res) => {
     if ( req.query.subscribed === "true" )
       channels.find({ name : {$in: subscribedChannels }})
 
+    if ( req.query.type === "direct")
+    {
+      // come si fanno a trovare tutti gli utenti che mi hanno scritto uno squeal?
+      // se appaio tra i receiver di un qualche squeal, allora ho una chat diretta con l'autore
+      // inoltre tra i receivers devono esserci solo io e altri utenti (solo receivers che iniziano con @)
+      const directChannels = Array.from(
+        new Set<string>(
+          (
+            await SquealModel.find({
+              $and: [
+                { receivers: req.auth.username },
+                { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
+              ],
+            })
+          ).map((squeal) => squeal.author)
+        )
+      );
+      res.json(directChannels.map(userToChannel));
+      return;
+    }
+
     if ( req.query.type)
       channels.find({type : req.query.type})
 
     if ( req.query.official === 'true' )
       channels.find({
-        name: {$regex: officialRegex}
+        name: {$regex: officialChannelRegex}
       })
     else if ( req.query.official === 'false' )
       channels.find({
-        name: {$regex: nonOfficialRegex}
+        name: {$regex: nonOfficialChannelRegex}
       })
   }
 

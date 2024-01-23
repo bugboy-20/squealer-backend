@@ -33,6 +33,17 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
       return res.status(404).end("Squeal doesn't exist");
 
     }
+    if( req?.auth.isAuth && req.query.from && typeof req.query.from === "string"){
+      // devo restituire gli squeal che l'utente in from mi ha scritto
+      // questi saranno gli squeal diretti
+      // questa query ha precedenza su tutte le altre
+      const out = await SquealModel.find({ author: req.query.from, $and: [
+        { receivers: authUsername },
+        { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
+      ] }).exec();
+      res.json(await Promise.all(out.map(s => squeal4NormalUser(s, {isAuth, authUsername}))))
+      return;
+    }
     if ( req.params.channelName || (req.query.channel && typeof req.query.channel === "string") )
     {
       const channelName = req.params.channelName ?? req.query.channel;

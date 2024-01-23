@@ -1,6 +1,8 @@
 import { Express } from "express"
 
-import {listAllUsers, addUser, deleteUser, findUser, getQuote, whoiam, addSMM, deleteSMM, changePassword, resetPassword, changeQuote, changeBlockedStatus, getAssitedVIP} from "../controllers/userController";
+
+import {listAllUsers, addUser, deleteUser, findUser, getQuote, whoiam, addSMM, deleteSMM, changePassword, resetPassword, changeQuote, changeBlockedStatus, buyQuote, getAssitedVIP} from "../controllers/userController";
+
 import { getNotifications } from "../controllers/squealController";
 import {and, auth, isModerator, sameUsername, isAuth, or} from "../middleware/auth";
 import {parseJWT} from "../middleware/parseJWT";
@@ -16,6 +18,7 @@ const userRoutes : (app : Express) => Express = app =>
       .get('/api/users/me/assistedVIP', auth(isAuth, getAssitedVIP), send401)
       .get('/api/users/:username', findUser)// auth(isAuth, findUser), send401)
       .get('/api/users/me/notifications', auth(isAuth, getNotifications), send401)
+      .post('/api/users/me/quota/buy', buyQuote)
       .get('/api/users/:username/subscriptions', send501) //TODO
       .patch('/api/users/:username/password', auth(sameUsername, changePassword), send401)
       .get('/api/users/:username/quota', auth(or(isModerator,sameUsername), getQuote), send401)

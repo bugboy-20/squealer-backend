@@ -265,6 +265,27 @@ const changeBlockedStatus : RequestHandler = catchServerError ( async (req,res) 
   res.json(userBackToFront(user))
 })
 
+const buyQuote : RequestHandler = catchServerError ( async (req,res) => {
+  const username = req?.auth.username
+  const { maxD, maxW, maxM } = req.body
+  if (!username) { res.status(400).json({message: 'username not provided'}); return; }
+  if (!maxD) { res.status(400).json({message: 'amount not provided'}); return; }
+
+  if(typeof maxD !== 'number' || typeof maxW !== "number" || typeof maxM !== "number") { res.status(400).json({message: 'amount must be a number'}); return; }
+
+  const charPerDay = Number(process.env.CHAR_PER_DAY ?? 100)
+  const newQuoteModifier = maxD / charPerDay;
+  
+  const user = await UserModel.findOne({ username }).exec()
+  if(!user) { res.status(400).json({message: 'user not found'}); return; }
+
+  user.quote_modifier = newQuoteModifier;
+  user.save();
+
+  res.json(userBackToFront(user))
+})
+
+
 
 const getAssitedVIP : RequestHandler = catchServerError ( async (req,res) => {
   const assistedVIP = await UserModel.find({ SMM: req.auth.username }).exec()
@@ -272,7 +293,8 @@ const getAssitedVIP : RequestHandler = catchServerError ( async (req,res) => {
   res.json(assistedVIP)
 })
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword, getAssitedVIP};
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword, getAssitedVIP, buyQuote };
+
 
 
 
