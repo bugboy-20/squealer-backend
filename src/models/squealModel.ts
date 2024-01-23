@@ -84,7 +84,8 @@ const commentSchema: Schema<Comment> = new Schema<Comment>({
 }).add(squealSchema).remove(['receivers','impressions','positive_reaction','negative_reaction'])
 
 
-squealSchema.pre('save', async function (next) {
+squealSchema.pre('save', async function (next, opts) {
+  if(opts?.disableMiddleware) return next();
   this.impressions = [...new Set(this.impressions)];
   // Impedisco di avere più di una reazione per utente
   this.positive_reaction = [...new Set(this.positive_reaction)];
@@ -102,8 +103,8 @@ squealSchema.pre('save', async function (next) {
 
 const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
 
-commentSchema.pre('save', async function(next) {
-
+commentSchema.pre('save', async function(next, opts) {
+  if(opts?.disableMiddleware) return next();
   let visibility = await getReceivers(this.reference).then(r => isPublic(r))
   await consumeQuota(this.body,visibility,this.author)
 next();
