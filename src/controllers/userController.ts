@@ -286,7 +286,15 @@ const buyQuote : RequestHandler = catchServerError ( async (req,res) => {
 })
 
 
-export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword, buyQuote };
+
+const getAssitedVIP : RequestHandler = catchServerError ( async (req,res) => {
+  const assistedVIP = await UserModel.find({ SMM: req.auth.username }).exec()
+    .then(uu => uu.map(u => u.username))
+  res.json(assistedVIP)
+})
+
+export {listAllUsers,addUser, deleteUser, findUser, getQuote, changeQuote, whoiam, subscribeToChannel, unsubscribeFromChannel, addSMM, deleteSMM, changeBlockedStatus, changePassword, resetPassword, getAssitedVIP, buyQuote };
+
 
 
 

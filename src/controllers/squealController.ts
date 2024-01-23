@@ -1,7 +1,7 @@
 
 import { RequestHandler } from "express";
 
-import {SquealModel} from "../models/squealModel";
+import {Squeal, SquealModel} from "../models/squealModel";
 
 import {catchServerError} from "../utils/controllersUtils";
 import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/SquealUtils";
@@ -220,4 +220,20 @@ const getNotifications : RequestHandler = catchServerError ( async (req,res) => 
 
 })
 
-export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions, getNotifications};
+const getInerractions : RequestHandler = catchServerError( async (req, res) => {
+
+  const sqID = req.params.id
+  if(!sqID)
+    throw new Error('id non definito')
+
+  const squeal : Squeal = await SquealModel.findOne({ _id: sqID }).exec().then(s => { if(!s) {throw Error('id incorretto?')} else return s })
+
+  const objres = {
+    positives: squeal.positive_reaction,
+    negatives: squeal.negative_reaction,
+    impressions: squeal.impressions
+  }
+  res.json(objres)
+})
+
+export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions, getNotifications, getInerractions};
