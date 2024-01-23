@@ -53,7 +53,7 @@ async function isSquealControversial(squeal: string | Squeal): Promise<boolean> 
 const userPopularity = async (username: string) => {
   // si calcola prendendo il numero di post popolari (Reazioni positive > Critical Mass) che l'utente ha fatto
 
-  const squeals : Squeal[]  = await Promise.all(await SquealModel.find({author: username}).exec())
+  const squeals : Squeal[]  = await SquealModel.find({author: username}).exec()
   
   let popularity : number = 100
 
