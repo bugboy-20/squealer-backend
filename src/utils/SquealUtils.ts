@@ -12,6 +12,7 @@ import {
   isSquealPopular,
   isSquealUnpopular,
 } from './popularityUtils';
+import { officialChannelRegex } from '../validators/utils/regex';
 
 const isPublic = async (receivers: string[]) => {
   const channelsName = receivers.filter((r) => r.startsWith('§'));
@@ -138,11 +139,10 @@ async function filterReceivers(
   se l'utente è autore del messaggio, può vedere tutti i destinatari
 */
 
-  const officialRegex = /^§[A-Z]+$/;
 
   if (!isAuth) {
     // canale è ufficiale se inizia con § ed è tutto maiuscolo
-    return receivers.filter((r) => officialRegex.test(r));
+    return receivers.filter((r) => officialChannelRegex.test(r));
   }
 
   if (author === authUsername) return receivers;
@@ -173,7 +173,7 @@ async function filterReceivers(
   return receivers.filter(
     (r) =>
       r === authUsername ||
-      officialRegex.test(r) ||
+      officialChannelRegex.test(r) ||
       channelsMap[r] === 'public' ||
       (userSubscriptions.includes(r) && channelsMap[r] === 'private') ||
       r.startsWith('#')
