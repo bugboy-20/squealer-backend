@@ -124,15 +124,8 @@ const postSqueal : RequestHandler = catchServerError( async (req, res) => {
     let inSqueal = stringifyGeoBody(req.body);
 
     const squeal = new SquealModel(inSqueal);
-    squeal.author = req.auth.username;
-    /*const existingUser = await UserModel.findOne({ username: user.username }).exec();
-
-    if (existingUser) {
-      res.statusCode = 409
-      return res.json({ message: 'Username already taken' });
-    }*/
-
-    //res.sendStatus(202) 
+    if(!squeal?.author || req.auth.usertype === "standard")
+      squeal.author = req.auth.username;
 
     try {
       const savedSqueal = await squeal.save();
