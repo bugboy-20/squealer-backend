@@ -28,7 +28,7 @@ const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
     popularityMap.set(user.username, popularity);
   }
 
-  const sortedUsers = users
+  const sortedUsers = [...users]
     .sort((a, b) => {
       const diff =
         popularity === 'ascending'
