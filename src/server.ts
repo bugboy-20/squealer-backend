@@ -25,6 +25,7 @@ import schedules from './schedules/schedules';
 import { credentials } from './middleware/credentials';
 import { corsOptions } from './utils/corsOptions';
 import path from 'path';
+import compression from "compression"
 
 /*
 const app = polka({
@@ -49,6 +50,7 @@ app
   //.use(parseJWT)
   .use(bodyParser.json())
   .use(bodyParser.urlencoded({ extended: true }))
+  .use(compression())
 
 db_open()
 schedules()
