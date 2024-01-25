@@ -50,7 +50,7 @@ const findUser : RequestHandler = catchServerError( async (req, res) => {
     if(user) {
       res.json(userBackToFront(user));
     } else {
-      res.status(404).end();
+      res.sendStatus(404);
     }
     //res.status(200).json(logs);
     //res.json(logs);
@@ -60,7 +60,7 @@ const findUser : RequestHandler = catchServerError( async (req, res) => {
 const getQuote : RequestHandler = catchServerError( async (req, res) => {
     const user : User | null = await UserModel.findOne({ username: req.params.username }).exec()
     if (!user) {
-      return res.status(404).end()
+      return res.sendStatus(404);
     }
 
     res.json(userBackToFront(user).quota);
@@ -69,7 +69,7 @@ const getQuote : RequestHandler = catchServerError( async (req, res) => {
 const changeQuote : RequestHandler = catchServerError( async (req, res) => {
     const user = await UserModel.findOne({ username: req.params.username }).exec()
     if (!user) {
-      return res.status(404).end()
+      return res.sendStatus(404);
     }
 
     const dailyQuota = req.body.dailyQuota;
@@ -114,7 +114,7 @@ const deleteUser : RequestHandler = catchServerError( async (req, res) => {
     } else {
       console.log(`User with username '${username}' not found.`);
       res.set('X-Error-Code', 'username not found')
-      res.status(400).end();
+      res.sendStatus(400);
       return false;
     }
 })
@@ -129,7 +129,7 @@ const subscribeToChannel : RequestHandler = catchServerError ( async (req,res) =
   const channelName = req.params.channelName
 
   if(!( username || channelName)) {
-    res.sendStatus(400).end()
+    res.sendStatus(400);
     return
   }
 
@@ -143,7 +143,7 @@ const unsubscribeFromChannel : RequestHandler = catchServerError ( async (req,re
   const channelName = req.params.channelName
 
   if(!username || username.trim() === '' || !channelName) {
-    res.sendStatus(400).end()
+    res.sendStatus(400);
     return
   }
   const result = await UserModel.updateOne( { username }, {$pull: { subscriptions: channelName }}).exec();
