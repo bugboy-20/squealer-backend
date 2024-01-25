@@ -8,6 +8,7 @@ import {mutateReactions, squeal4NormalUser, stringifyGeoBody} from "../utils/Squ
 import { looseSquealRead_t } from "../validators/squealValidators";
 import { findVisibleChannels } from "../utils/channelUtils";
 import { automaticChannelsList } from "../utils/automaticChannels";
+import { featureCollection_t } from "../validators/utils/geojson";
 
 const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
@@ -16,7 +17,12 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
 
     const { visibleChannels } = await findVisibleChannels(isAuth, authUsername)
 
-    const squeals = SquealModel.find({ receivers: { $in: visibleChannels } });
+    const squeals = SquealModel.find({
+      $or: [
+        { receivers: { $in: visibleChannels } },
+        { receivers: { $regex: '^#', $options: 'i' } },
+      ],
+    });
     let automaticSqueals: looseSquealRead_t[] = [];
 
     if (req.params.id) {
@@ -229,4 +235,35 @@ const getInerractions : RequestHandler = catchServerError( async (req, res) => {
   res.json(objres)
 })
 
-export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions, getNotifications, getInerractions};
+const updateTimedSqueals : RequestHandler = catchServerError( async (req, res) => {
+  const referenceID = req.params.id;
+  const {coords} = req.body;
+  const timedSqueal = await SquealModel.findOne({ _id: referenceID }).exec();
+  if(!timedSqueal || timedSqueal.body.type !== 'geo') {
+    res.status(404).end("Squeal doesn't exist");
+    return;
+  }
+  const squealContent: featureCollection_t = JSON.parse(timedSqueal.body.content)
+  squealContent.features.push({
+    type: 'Feature',
+    properties: {
+      popup: `posizione`,
+    },
+    geometry: {
+      type: 'Point',
+      coordinates: [coords.longitude, coords.latitude],
+    },
+  });
+  squealContent.center = [coords.latitude, coords.longitude];
+
+  timedSqueal.body.content = JSON.stringify(squealContent);
+  await timedSqueal.save({disableMiddleware: true});
+
+  const out = await squeal4NormalUser(timedSqueal, {isAuth: req.auth.isAuth, authUsername: req.auth.username});
+  if(!out){
+    res.sendStatus(404)
+  }
+  res.json(out);
+})
+
+export {postSqueal, getSqueals, deleteSqueal, updateSqueal, addReceiver, changeReactions, getNotifications, getInerractions, updateTimedSqueals};
