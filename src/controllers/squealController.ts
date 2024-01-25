@@ -255,6 +255,7 @@ const updateTimedSqueals : RequestHandler = catchServerError( async (req, res) =
       coordinates: [coords.longitude, coords.latitude],
     },
   });
+  squealContent.center = [coords.latitude, coords.longitude];
 
   timedSqueal.body.content = JSON.stringify(squealContent);
   await timedSqueal.save({disableMiddleware: true});
