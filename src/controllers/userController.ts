@@ -29,7 +29,7 @@ const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
   }
 
   const sortedUsers = users
-    .toSorted((a, b) => {
+    .sort((a, b) => {
       const diff =
         popularity === 'ascending'
           ? popularityMap.get(a.username) - popularityMap.get(b.username)
@@ -39,7 +39,7 @@ const listAllUsers : RequestHandler = catchServerError( async (req, res) => {
         ? b.username.localeCompare(a.username)
         : a.username.localeCompare(b.username);
     })
-    .map((user) => userBackToFront(user));
+    .map((user : User) => userBackToFront(user));
 
   res.json(sortedUsers);
 },500)

@@ -97,7 +97,12 @@ squealSchema.pre('save', async function (next, opts) {
   let visibility = await isPublic(this.receivers)
 
 
-  await consumeQuota(this.body, visibility, this.author)
+  try {
+    await consumeQuota(this.body, visibility, this.author)
+  } catch (e) {
+    console.log('non si è riuscit a togliere quota a')
+    console.log(this)
+  }
   next();
 });
 
@@ -106,8 +111,14 @@ const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
 commentSchema.pre('save', async function(next, opts) {
   if(opts?.disableMiddleware) return next();
   let visibility = await getReceivers(this.reference).then(r => isPublic(r))
-  await consumeQuota(this.body,visibility,this.author)
-next();
+  try {
+    await consumeQuota(this.body, visibility, this.author)
+  } catch (e) {
+    console.log('non si è riuscit a togliere quota a')
+    console.log(this)
+  }
+
+  next();
 })
 
 const CommentModel = mongoose.model<Comment>('Comment', commentSchema);
