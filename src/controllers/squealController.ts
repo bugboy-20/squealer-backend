@@ -15,14 +15,8 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     const isAuth = req.auth.isAuth;
     const authUsername = req.auth.username;
 
-    const { visibleChannels } = await findVisibleChannels(isAuth, authUsername)
-
-    const squeals = SquealModel.find({
-      $or: [
-        { receivers: { $in: visibleChannels } },
-        { receivers: { $regex: '^#', $options: 'i' } },
-      ],
-    });
+    const {notVisibleChannels} = await findVisibleChannels(isAuth, authUsername)
+    const squeals = SquealModel.find({ receivers: { $nin: notVisibleChannels } });
     let automaticSqueals: looseSquealRead_t[] = [];
 
     if (req.params.id) {
@@ -41,14 +35,12 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     }
     if( req?.auth.isAuth && req.query.from && typeof req.query.from === "string"){
       // devo restituire gli squeal che l'utente in from mi ha scritto
-      // questi saranno gli squeal diretti
-      // questa query ha precedenza su tutte le altre
-      const out = await SquealModel.find({ author: req.query.from, $and: [
-        { receivers: authUsername },
-        { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
-      ] }).exec();
-      res.json(await Promise.all(out.map(s => squeal4NormalUser(s, {isAuth, authUsername}))))
-      return;
+      // e che non hanno destinatari che non iniziano con @
+      // questi saranno gli squeal diretti 
+      squeals.find({ author: req.query.from, $and: [
+          { receivers: authUsername },
+          { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
+        ] })
     }
     if ( req.params.channelName || (req.query.channel && typeof req.query.channel === "string") )
     {
