@@ -239,7 +239,6 @@ const updateTimedSqueals : RequestHandler = catchServerError( async (req, res) =
   const referenceID = req.params.id;
   const {coords} = req.body;
   const timedSqueal = await SquealModel.findOne({ _id: referenceID }).exec();
-  console.log(timedSqueal)
   if(!timedSqueal || timedSqueal.body.type !== 'geo') {
     res.status(404).end("Squeal doesn't exist");
     return;
