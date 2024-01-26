@@ -69,12 +69,12 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     }
     if ( req.query.query && typeof req.query.query === "string") {
       if(req.query.query.startsWith('@'))
-        squeals.find({ "body.content": { $regex: new RegExp(req.query.query), $options: 'i' }})
-      else if(req.query.query.startsWith('#') || req.query.query.startsWith('§'))
+        squeals.find({ "body.type": "text", "body.content": { $regex: new RegExp(req.query.query), $options: 'i' }})
+      else
         squeals.find({
           $or: [
             { receivers: { $regex: new RegExp(req.query.query), $options: 'i' }},
-            { "body.content": { $regex: new RegExp(req.query.query), $options: 'i' }},
+            { "body.type": "text", "body.content": { $regex: new RegExp(req.query.query), $options: 'i' }},
           ]
         })
     }

@@ -19,7 +19,7 @@ const isPublic = async (receivers: string[]) => {
   const channels = await Promise.all(
     channelsName.map((c) => ChannelModel.findOne({ name: c }))
   );
-  return channels.some((c) => c?.type === 'public');
+  return channels.some((c) => c?.type === 'public') || receivers.some((r) => r.startsWith('#'));
 }
 
 async function squeal4NormalUser(
