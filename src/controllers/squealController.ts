@@ -108,7 +108,7 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
         dbRes.negative_reaction.push(req.auth.username); break
     }
 
-    dbRes.save({disableQuota: true});
+    await dbRes.save({disableQuota: true});
 
     const out = await squeal4NormalUser(dbRes, {isAuth: req.auth.isAuth, authUsername: req.auth.username});
     if(out)

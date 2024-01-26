@@ -280,7 +280,7 @@ const buyQuote : RequestHandler = catchServerError ( async (req,res) => {
   if(!user) { res.status(400).json({message: 'user not found'}); return; }
 
   user.quote_modifier = newQuoteModifier;
-  user.save();
+  await user.save();
 
   res.json(userBackToFront(user))
 })
