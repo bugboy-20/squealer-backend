@@ -108,7 +108,7 @@ const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //
         dbRes.negative_reaction.push(req.auth.username); break
     }
 
-    dbRes.save();
+    await dbRes.save({disableQuota: true});
 
     const out = await squeal4NormalUser(dbRes, {isAuth: req.auth.isAuth, authUsername: req.auth.username});
     if(out)
@@ -162,7 +162,7 @@ const addReceiver: RequestHandler = catchServerError(async (req, res) => {
     return;
   }
   squeal.receivers.push(receiver);
-  await squeal.save();
+  await squeal.save({disableMiddleware: true});
 
   const out = await squeal4NormalUser(squeal);
   if(!out){
@@ -190,7 +190,7 @@ const changeReactions: RequestHandler = catchServerError(async (req, res) => {
 
   squeal.positive_reaction = mutateReactions(squeal.positive_reaction, positive, req.auth.username)
   squeal.negative_reaction = mutateReactions(squeal.negative_reaction, negative, req.auth.username);
-  await squeal.save()
+  await squeal.save({disableQuota: true})
 
   const out = await squeal4NormalUser(squeal);
   if(!out){

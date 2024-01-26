@@ -24,8 +24,10 @@ const addToControversial: Schedule = [
 
     for (const squeal of everySqueal) {
       if (await isSquealControversial(squeal)) {
-        squeal.receivers.push('§CONTROVERSIAL');
-        squeal.save({ disableMiddleware: true });
+        await SquealModel.updateOne(
+          { _id: squeal._id },
+          { $push: { receivers: '§CONTROVERSIAL' } }
+        ).exec();
       }
     }
   },
@@ -34,18 +36,11 @@ const addToControversial: Schedule = [
 const addToTrending: Schedule = [
   '0 0 7 * * *',
   async () => {
-    const trendingSqueals = await SquealModel.find({
-      receivers: '§TRENDING',
-    }).exec();
-
     // remove the old trending squeals
-    for (const squeal of trendingSqueals) {
-      const index = squeal.receivers.indexOf('§TRENDING');
-      if (index > -1) {
-        squeal.receivers.splice(index, 1);
-      }
-      squeal.save({ disableMiddleware: true });
-    }
+    await SquealModel.updateOne(
+      { receivers: '§TRENDING' },
+      { $pull: { receivers: '§TRENDING' } }
+    ).exec();
 
     // get 20 squeals with the most positive reactions
     const newTrendingSqueals = await SquealModel.aggregate([
