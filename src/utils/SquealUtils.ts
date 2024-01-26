@@ -66,7 +66,7 @@ async function squeal4NormalUser(
     comments: await getCommentsForASqueal(squeal._id.toString()),
   };
   const result = squealReadSchema.safeParse(ret);
-  if (!result.success) { console.log(result.error); return null };
+  if (!result.success) { console.log(result.error, `Lo squeal problematico è: ${ret.id}`); return null };
   return result.data;
 }
 

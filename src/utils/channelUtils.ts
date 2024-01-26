@@ -1,6 +1,7 @@
 import {Channel, ChannelModel} from "../models/channelModel";
 import { UserModel } from "../models/userModel";
 import { channel_t } from "../validators/channelValidator";
+import { officialChannelRegex } from "../validators/utils/regex";
 
 function addSubInfo(ch : Channel, subs : string[]) : Channel {
   const newCh : any = {
@@ -36,13 +37,15 @@ async function addSubcribedInfo(ch : Channel | Channel[], username : string) : P
 }
 
 async function findVisibleChannels(isAuth: boolean, username: string) {
-  const officialRegex = /^§[A-Z]+.*$/;
-
   const subscribedChannels = ( await UserModel.findOne({ username }))?.subscriptions ?? []
   const publicChannels = await ChannelModel.find({ type : "public" }).then( channels => channels.map( channel => channel.name ) )
-  const officialChannels = publicChannels.filter( channel =>  officialRegex.test(channel) )
+  const officialChannels = publicChannels.filter( channel => officialChannelRegex.test(channel) )
   const visibleChannels = Array.from(new Set<string>(isAuth ? subscribedChannels.concat(publicChannels) : officialChannels));
-  return {visibleChannels, subscribedChannels}
+  const privateChannels = await ChannelModel.find({ type : "private" }).then( channels => channels.map( channel => channel.name ) )
+  const notVisibleChannels = privateChannels.filter(channel => !subscribedChannels.includes(channel))
+
+
+  return {notVisibleChannels, visibleChannels, subscribedChannels}
 }
 
 function userToChannel(username : string) : channel_t {

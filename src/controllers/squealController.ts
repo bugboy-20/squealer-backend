@@ -15,14 +15,8 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     const isAuth = req.auth.isAuth;
     const authUsername = req.auth.username;
 
-    const { visibleChannels } = await findVisibleChannels(isAuth, authUsername)
-
-    const squeals = SquealModel.find({
-      $or: [
-        { receivers: { $in: visibleChannels } },
-        { receivers: { $regex: '^#', $options: 'i' } },
-      ],
-    });
+    const {notVisibleChannels} = await findVisibleChannels(isAuth, authUsername)
+    const squeals = SquealModel.find({ receivers: { $nin: notVisibleChannels } });
     let automaticSqueals: looseSquealRead_t[] = [];
 
     if (req.params.id) {
@@ -36,19 +30,17 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
         if (response) return res.json(response);
       }
 
-      return res.status(404).end("Squeal doesn't exist");
+      return res.status(404).json("Squeal doesn't exist");
 
     }
     if( req?.auth.isAuth && req.query.from && typeof req.query.from === "string"){
       // devo restituire gli squeal che l'utente in from mi ha scritto
-      // questi saranno gli squeal diretti
-      // questa query ha precedenza su tutte le altre
-      const out = await SquealModel.find({ author: req.query.from, $and: [
-        { receivers: authUsername },
-        { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
-      ] }).exec();
-      res.json(await Promise.all(out.map(s => squeal4NormalUser(s, {isAuth, authUsername}))))
-      return;
+      // e che non hanno destinatari che non iniziano con @
+      // questi saranno gli squeal diretti 
+      squeals.find({ author: req.query.from, $and: [
+          { receivers: authUsername },
+          { receivers: { $not: { $regex: '^[^@]', $options: 'i' } } },
+        ] })
     }
     if ( req.params.channelName || (req.query.channel && typeof req.query.channel === "string") )
     {
@@ -162,11 +154,11 @@ const addReceiver: RequestHandler = catchServerError(async (req, res) => {
   const receiver = req.body.receiver;
   const squeal = await SquealModel.findOne({ _id: squealId }).exec();
   if (!squeal) {
-    res.status(404).end("Squeal doesn't exist");
+    res.status(404).json("Squeal doesn't exist");
     return;
   }
   if (squeal.receivers.includes(receiver)) {
-    res.status(409).end("Receiver already exists");
+    res.status(409).json("Receiver already exists");
     return;
   }
   squeal.receivers.push(receiver);
@@ -182,17 +174,17 @@ const addReceiver: RequestHandler = catchServerError(async (req, res) => {
 const changeReactions: RequestHandler = catchServerError(async (req, res) => {
   const squeal = await SquealModel.findOne({ _id: req.params.id }).exec();
   if (!squeal) {
-    res.status(404).end();
+    res.status(404).json();
     return;
   }
   const {positive, negative} = req.body;
 
   if(typeof positive !== "number" && typeof negative !== "number") {
-    res.status(400).end("Reactions should be numbers");
+    res.status(400).json("Reactions should be numbers");
     return;
   }
   if (positive < 0 || negative < 0) {
-    res.status(400).end("Reactions must be positive");
+    res.status(400).json("Reactions must be positive");
     return;
   }
 
@@ -240,7 +232,7 @@ const updateTimedSqueals : RequestHandler = catchServerError( async (req, res) =
   const {coords} = req.body;
   const timedSqueal = await SquealModel.findOne({ _id: referenceID }).exec();
   if(!timedSqueal || timedSqueal.body.type !== 'geo') {
-    res.status(404).end("Squeal doesn't exist");
+    res.status(404).json("Squeal doesn't exist");
     return;
   }
   const squealContent: featureCollection_t = JSON.parse(timedSqueal.body.content)
