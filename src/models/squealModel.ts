@@ -94,6 +94,7 @@ squealSchema.pre('save', async function (next, opts) {
   // Elimino eventuale doppio voto
   this.negative_reaction = this.negative_reaction.filter(s => !this.positive_reaction.includes(s))
 
+  if(opts?.disableQuota) return next();
   let visibility = await isPublic(this.receivers)
 
 
@@ -109,7 +110,7 @@ squealSchema.pre('save', async function (next, opts) {
 const SquealModel = mongoose.model<Squeal>('Squeal', squealSchema);
 
 commentSchema.pre('save', async function(next, opts) {
-  if(opts?.disableMiddleware) return next();
+  if(opts?.disableMiddleware || opts?.disableQuota) return next();
   let visibility = await getReceivers(this.reference).then(r => isPublic(r))
   try {
     await consumeQuota(this.body, visibility, this.author)

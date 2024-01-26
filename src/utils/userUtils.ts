@@ -1,4 +1,3 @@
-import { SquealModel } from "../models/squealModel"
 import { User, UserModel } from "../models/userModel"
 import { userReadSchema, userRead_t, userWriteSchema, userWrite_t } from "../validators/userValidators"
 import {userPopularity} from "./popularityUtils";
