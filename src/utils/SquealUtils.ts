@@ -62,6 +62,7 @@ async function squeal4NormalUser(
     positive_reaction: squeal.positive_reaction.length,
     negative_reaction: squeal.negative_reaction.length,
     reacted: !!(filter?.isAuth && (squeal.positive_reaction.includes(filter.authUsername) || squeal.negative_reaction.includes(filter.authUsername))),
+    isViewed: squeal.impressions.includes(filter?.authUsername ?? ""),
     category: newCategory,
     comments: await getCommentsForASqueal(squeal._id.toString()),
   };
