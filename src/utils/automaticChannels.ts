@@ -14,6 +14,7 @@ const baseSqueal: squealRead_t = {
   comments: [],
   category: ['public', 'automatic'],
   reacted: true,
+  isViewed: true,
   impressions: 0,
   negative_reaction: 0,
   positive_reaction: 0,
@@ -73,4 +74,3 @@ const automaticChannelsList: automaticChannelsList_t = {
 };
 
 export { automaticChannelsList };
-

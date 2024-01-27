@@ -8,6 +8,7 @@ type AsyncRequestHandler = RequestHandler extends (...a: infer A) => any
 const handleError = (res: Response, error: unknown, errorCode = 500, errorMessage?: string) => {
   const eMessagge = error instanceof Error ? error.message : String(error);
   const message = errorMessage ?? eMessagge ?? 'Internal Server Error';
+  console.error(eMessagge);
   console.error(message);
   res.status(errorCode).json({ message });
 }

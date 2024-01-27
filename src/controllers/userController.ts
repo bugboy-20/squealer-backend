@@ -54,7 +54,7 @@ const findUser : RequestHandler = catchServerError( async (req, res) => {
     }
     //res.status(200).json(logs);
     //res.json(logs);
-  },500,'findUser error: ')
+  },500)
 
 
 const getQuote : RequestHandler = catchServerError( async (req, res) => {
