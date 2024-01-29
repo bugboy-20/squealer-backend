@@ -18,7 +18,6 @@ async function isSquealPopularByID(id :string) : Promise<boolean> {
 }
 
 function isSquealPopularByObject(squeal : Squeal) : boolean {
-    //TODO: abstract the critical mass away from this function
     const CM = squeal.impressions.length * 0.25
     return (squeal.positive_reaction.length > CM) 
 }
@@ -40,7 +39,6 @@ async function isSquealUnpopularByID(id :string) : Promise<boolean> {
 }
 
 function isSquealUnpopularByObject(squeal : Squeal) : boolean {
-    //TODO: abstract the critical mass away from this function
     const CM = squeal.impressions.length * 0.25
     return (squeal.negative_reaction.length > CM) 
 }

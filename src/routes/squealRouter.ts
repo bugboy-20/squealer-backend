@@ -18,7 +18,7 @@ const squealRoutes : (app : Express) => Express = app =>
     .patch('/api/squeals/:id/geopoint', updateTimedSqueals)
     .patch('/api/squeals/:id/receivers', addReceiver)
     .patch('/api/squeals/:id/reactions', changeReactions)
-    .get('/api/squeals/:squealID/comments',getComments) // TODO restituture un 'albero'
+    .get('/api/squeals/:squealID/comments',getComments)
     .post('/api/squeals/:refID/reply', postComment)
 
 

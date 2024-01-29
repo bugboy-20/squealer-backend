@@ -8,10 +8,6 @@ import { nonOfficialChannelRegex, officialChannelRegex } from '../validators/uti
 import { UserModel } from '../models/userModel';
 import { SquealModel } from '../models/squealModel';
 
-/* TODO
- * controlli sul tipo di canali che un utente può creare
- */
-
 
 const addChannel : RequestHandler = catchServerError(
   async (req, res) => {

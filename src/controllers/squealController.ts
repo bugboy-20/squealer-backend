@@ -20,7 +20,6 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     let automaticSqueals: looseSquealRead_t[] = [];
 
     if (req.params.id) {
-      //TODO valutare di sportre
       const json = await squeals.findOne({ _id: req.params.id }).exec();
       if (json) {
         const response = await squeal4NormalUser(json, {
@@ -61,7 +60,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     if ( req.query.page  && typeof req.query.page === "string") {
       let pNum = parseInt(req.query.page);
       squeals
-        .skip(pNum*10) //TODO generalizzare
+        .skip(pNum*10)
         .limit(10)
       
       // implement pagination with external data
@@ -89,7 +88,7 @@ const getSqueals : RequestHandler = catchServerError( async (req, res) => {
     res.json(automaticSqueals.concat(result));
   })
 
-const updateSqueal : RequestHandler = catchServerError( async (req, res) => { //TODO gestire con autenticazione
+const updateSqueal : RequestHandler = catchServerError( async (req, res) => {
 
 
   let squealID = req.params.id;

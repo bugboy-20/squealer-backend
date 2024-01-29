@@ -19,13 +19,13 @@ const userRoutes : (app : Express) => Express = app =>
       .get('/api/users/:username', findUser)// auth(isAuth, findUser), send401)
       .get('/api/users/me/notifications', auth(isAuth, getNotifications), send401)
       .post('/api/users/me/quota/buy', buyQuote)
-      .get('/api/users/:username/subscriptions', send501) //TODO
+      .get('/api/users/:username/subscriptions', send501)
       .patch('/api/users/:username/password', auth(sameUsername, changePassword), send401)
       .get('/api/users/:username/quota', auth(or(isModerator,sameUsername), getQuote), send401)
       .patch('/api/users/:username/quota', changeQuote)
       .patch("/api/users/:username/blocked", changeBlockedStatus)
       .patch('/api/users/:username/smm', auth(sameUsername, addSMM), send401)
-      .delete('/api/users/:username/smm', auth(sameUsername, deleteSMM), send401) //TODO filter with auth
+      .delete('/api/users/:username/smm', auth(sameUsername, deleteSMM), send401)
       .delete('/api/users/:username', auth(and(isModerator, sameUsername), deleteUser), send401)
 
 export default userRoutes;

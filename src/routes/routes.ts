@@ -15,7 +15,7 @@ let routelist : Array<(a : Express) => Express> = [
     squealRoutes,
     channelRoutes,
     mediaRoutes,
-    commentRoutes, // TODO for dev only
+    commentRoutes,
     serverInfo
 ];
 
